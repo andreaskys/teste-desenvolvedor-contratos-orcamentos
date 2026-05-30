@@ -11,11 +11,33 @@ export class ContractService {
   }
 
   static async create(companyId: string, data: any) {
+    const { 
+      number, 
+      title, 
+      relatedParty, 
+      contractType, 
+      value, 
+      startDate, 
+      endDate, 
+      templateId, 
+      filledFields 
+    } = data;
+
     return prisma.contract.create({
       data: {
-        ...data,
+        number,
+        title,
+        relatedParty: relatedParty || 'Não Informado',
+        contractType: contractType || 'Outros',
+        value,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        status: ContractStatus.DRAFT,
+        filledFields: filledFields || {},
         companyId,
+        templateId,
       },
+      include: { template: true },
     });
   }
 

@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { TemplateService } from '../services/templateService';
+import prisma from '../utils/prisma';
 
 export class TemplateController {
   static async index(req: AuthRequest, res: Response) {

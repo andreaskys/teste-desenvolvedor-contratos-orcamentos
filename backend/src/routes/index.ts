@@ -9,6 +9,7 @@ import { authMiddleware } from '../middlewares/auth';
 const routes = Router();
 
 // Public routes
+routes.get('/ping', (req, res) => res.json({ message: 'pong' }));
 routes.post('/auth/login', AuthController.login);
 
 // Protected routes

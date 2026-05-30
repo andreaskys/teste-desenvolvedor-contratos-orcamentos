@@ -27,6 +27,8 @@ const NewContract: React.FC = () => {
   const [contractData, setContractData] = useState({
     number: `CNT-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
     title: '',
+    relatedParty: '',
+    contractType: 'Prestação de Serviço',
     value: '',
     startDate: '',
     endDate: '',
@@ -43,11 +45,11 @@ const NewContract: React.FC = () => {
 
   const handleContractSubmit = async () => {
     try {
-      // Logic to merge template content with formData could go here if needed server-side
       await api.post('/contracts', {
         ...contractData,
         value: parseFloat(contractData.value),
         templateId: selectedTemplate?.id,
+        filledFields: formData,
         status: 'DRAFT',
       });
       navigate('/contracts');
@@ -154,6 +156,30 @@ const NewContract: React.FC = () => {
                 />
               </div>
               <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700 ml-1">Parte Relacionada</label>
+                <input
+                  type="text"
+                  placeholder="Nome ou Razão Social"
+                  value={contractData.relatedParty}
+                  onChange={(e) => setContractData({ ...contractData, relatedParty: e.target.value })}
+                  className="apple-input w-full"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-gray-700 ml-1">Tipo de Contrato</label>
+                <select 
+                  value={contractData.contractType}
+                  onChange={(e) => setContractData({ ...contractData, contractType: e.target.value })}
+                  className="apple-input w-full"
+                >
+                  <option value="Trabalho">Trabalho</option>
+                  <option value="Obra">Obra</option>
+                  <option value="Locação">Locação</option>
+                  <option value="Prestação de Serviço">Prestação de Serviço</option>
+                  <option value="Outros">Outros</option>
+                </select>
+              </div>
+              <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700 ml-1">Valor do Contrato</label>
                 <input
                   type="number"
@@ -236,7 +262,9 @@ const NewContract: React.FC = () => {
                 <div className="space-y-2">
                   <p className="text-sm"><span className="text-gray-500">Número:</span> <span className="font-medium">{contractData.number}</span></p>
                   <p className="text-sm"><span className="text-gray-500">Título:</span> <span className="font-medium">{contractData.title}</span></p>
-                  <p className="text-sm"><span className="text-gray-500">Valor:</span> <span className="font-medium">R$ {parseFloat(contractData.value).toLocaleString('pt-BR')}</span></p>
+                  <p className="text-sm"><span className="text-gray-500">Parte Relacionada:</span> <span className="font-medium">{contractData.relatedParty}</span></p>
+                  <p className="text-sm"><span className="text-gray-500">Tipo:</span> <span className="font-medium">{contractData.contractType}</span></p>
+                  <p className="text-sm"><span className="text-gray-500">Valor:</span> <span className="font-medium">R$ {parseFloat(contractData.value || '0').toLocaleString('pt-BR')}</span></p>
                   <p className="text-sm"><span className="text-gray-500">Vigência:</span> <span className="font-medium">{new Date(contractData.startDate).toLocaleDateString()} - {new Date(contractData.endDate).toLocaleDateString()}</span></p>
                 </div>
               </div>

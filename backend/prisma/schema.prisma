@@ -67,10 +67,13 @@ model Contract {
   id               String            @id @default(uuid())
   number           String            @unique
   title            String
+  relatedParty     String            @default("Não Informado") @map("related_party")
+  contractType     String            @default("Outros") @map("contract_type")
   value            Decimal           @db.Decimal(15, 2)
   startDate        DateTime          @map("start_date")
   endDate          DateTime          @map("end_date")
   status           ContractStatus    @default(DRAFT)
+  filledFields     Json?             @default("{}") @map("filled_fields")
   companyId        String            @map("company_id")
   templateId       String?           @map("template_id")
   createdAt        DateTime          @default(now())
