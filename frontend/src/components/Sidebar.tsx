@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FileText, HardHat, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, FileText, HardHat, Settings, LogOut, Copy } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 
 const Sidebar: React.FC = () => {
@@ -9,6 +9,7 @@ const Sidebar: React.FC = () => {
   const navItems = [
     { to: '/', icon: <LayoutDashboard size={20} />, label: 'Dashboard' },
     { to: '/contracts', icon: <FileText size={20} />, label: 'Contratos' },
+    { to: '/templates', icon: <Copy size={20} />, label: 'Templates' },
     { to: '/obras', icon: <HardHat size={20} />, label: 'Obras' },
     { to: '/settings', icon: <Settings size={20} />, label: 'Configurações' },
   ];

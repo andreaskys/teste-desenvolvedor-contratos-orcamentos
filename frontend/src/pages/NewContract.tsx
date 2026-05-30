@@ -94,22 +94,35 @@ const NewContract: React.FC = () => {
               <p className="text-gray-500">Selecione o tipo de contrato que deseja criar.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {templates.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => handleTemplateSelect(t)}
-                  className="flex items-center gap-4 p-6 bg-gray-50 hover:bg-white hover:shadow-md border border-transparent hover:border-blue-100 rounded-2xl transition-all text-left group"
-                >
-                  <div className="p-3 bg-white rounded-xl text-blue-500 shadow-sm">
-                    <FileText size={24} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-bold text-gray-900">{t.name}</p>
-                    <p className="text-sm text-gray-500">Clique para selecionar</p>
-                  </div>
-                  <ArrowRight size={20} className="text-gray-300 group-hover:text-blue-500 transition-colors" />
-                </button>
-              ))}
+              {templates.length === 0 ? (
+                <div className="col-span-full p-12 text-center bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+                  <FileText size={40} className="mx-auto mb-4 text-gray-300" />
+                  <p className="text-gray-500 mb-4">Você ainda não tem templates cadastrados.</p>
+                  <button 
+                    onClick={() => navigate('/templates')}
+                    className="apple-button-secondary inline-flex items-center gap-2"
+                  >
+                    <Plus size={18} /> Criar Primeiro Template
+                  </button>
+                </div>
+              ) : (
+                templates.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => handleTemplateSelect(t)}
+                    className="flex items-center gap-4 p-6 bg-gray-50 hover:bg-white hover:shadow-md border border-transparent hover:border-blue-100 rounded-2xl transition-all text-left group"
+                  >
+                    <div className="p-3 bg-white rounded-xl text-blue-500 shadow-sm">
+                      <FileText size={24} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-900">{t.name}</p>
+                      <p className="text-sm text-gray-500">Clique para selecionar</p>
+                    </div>
+                    <ArrowRight size={20} className="text-gray-300 group-hover:text-blue-500 transition-colors" />
+                  </button>
+                ))
+              )}
             </div>
           </div>
         )}
