@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Plus, Search, Filter, MoreVertical, FileText } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus, Search, Filter, MoreVertical, FileText, Send, CheckCircle, Clock } from 'lucide-react';
 import api from '../api/client';
 
 interface Contract {
@@ -31,6 +32,19 @@ const Contracts: React.FC = () => {
     fetchContracts();
   }, []);
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'ACTIVE':
+        return <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg bg-green-50 text-green-600 border border-green-100"><CheckCircle size={12} /> Ativo</span>;
+      case 'DRAFT':
+        return <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg bg-gray-50 text-gray-500 border border-gray-100"><Clock size={12} /> Rascunho</span>;
+      case 'PENDING_SIGNATURE':
+        return <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg bg-orange-50 text-orange-600 border border-orange-100"><Send size={12} /> Aguardando Assinatura</span>;
+      default:
+        return <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-gray-50 text-gray-500 border border-gray-100">{status}</span>;
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -38,10 +52,10 @@ const Contracts: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Contratos</h1>
           <p className="text-gray-500">Gerencie todos os contratos da sua empresa</p>
         </div>
-        <button className="apple-button-primary flex items-center gap-2">
+        <Link to="/contracts/new" className="apple-button-primary flex items-center gap-2">
           <Plus size={20} />
           Novo Contrato
-        </button>
+        </Link>
       </div>
 
       <div className="apple-card">
@@ -82,10 +96,14 @@ const Contracts: React.FC = () => {
                 </tr>
               ) : (
                 contracts.map((contract) => (
-                  <tr key={contract.id} className="group hover:bg-gray-50/50 transition-colors">
+                  <tr 
+                    key={contract.id} 
+                    onClick={() => navigate(`/contracts/${contract.id}`)}
+                    className="group hover:bg-gray-50/50 transition-colors cursor-pointer"
+                  >
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-50 text-blue-500 rounded-lg">
+                        <div className="p-2 bg-blue-50 text-blue-500 rounded-lg group-hover:bg-blue-500 group-hover:text-white transition-all duration-300">
                           <FileText size={18} />
                         </div>
                         <div>
@@ -95,9 +113,7 @@ const Contracts: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-4 px-4">
-                      <span className="px-2 py-1 text-xs font-bold rounded-lg bg-green-100 text-green-700">
-                        {contract.status}
-                      </span>
+                      {getStatusBadge(contract.status)}
                     </td>
                     <td className="py-4 px-4 text-sm font-medium text-gray-900">
                       {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(contract.value)}
