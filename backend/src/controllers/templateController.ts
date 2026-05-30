@@ -27,6 +27,7 @@ export class TemplateController {
       const template = await TemplateService.create(req.user!.companyId, req.body);
       return res.status(201).json(template);
     } catch (error: any) {
+      console.error('[TemplateController.store] Error:', error.message);
       return res.status(400).json({ error: error.message });
     }
   }

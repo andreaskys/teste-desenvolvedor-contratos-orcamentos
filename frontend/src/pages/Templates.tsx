@@ -54,14 +54,31 @@ const Templates: React.FC = () => {
     setNewTemplate({ ...newTemplate, fields });
   };
 
+  const [error, setError] = useState('');
+
   const handleSave = async () => {
+    if (!newTemplate.name || !newTemplate.content) {
+      setError('Por favor, preencha o nome e o conteúdo do template.');
+      return;
+    }
+
+    if (newTemplate.fields.some(f => !f.label || !f.key)) {
+      setError('Por favor, preencha todos os campos da definição de campos.');
+      return;
+    }
+
     try {
+      setLoading(true);
+      setError('');
       await api.post('/templates', newTemplate);
       setShowCreateModal(false);
       setNewTemplate({ name: '', content: '', fields: [] });
       fetchTemplates();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      setError(err.response?.data?.error || 'Erro ao salvar o template. Verifique os campos.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -73,7 +90,10 @@ const Templates: React.FC = () => {
           <p className="text-gray-500">Gerencie os modelos de contrato da sua empresa</p>
         </div>
         <button 
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => {
+            setError('');
+            setShowCreateModal(true);
+          }}
           className="apple-button-primary flex items-center gap-2"
         >
           <Plus size={20} />
@@ -122,6 +142,11 @@ const Templates: React.FC = () => {
             </div>
             
             <div className="space-y-6">
+              {error && (
+                <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm border border-red-100">
+                  {error}
+                </div>
+              )}
               <div className="space-y-1">
                 <label className="text-sm font-medium text-gray-700">Nome do Template</label>
                 <input 

@@ -50,6 +50,23 @@ describe('Integration Tests - Growth SaaS', () => {
   });
 
   describe('Fluxo de Contratos', () => {
+    it('deve criar um template com campos dinâmicos', async () => {
+      const res = await request(app)
+        .post('/api/templates')
+        .set('Authorization', `Bearer ${tokenA}`)
+        .send({
+          name: 'Template de Teste',
+          content: 'Conteúdo do template {{campo1}}',
+          fields: [
+            { label: 'Campo 1', key: 'campo1', type: 'text', required: true }
+          ]
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.name).toBe('Template de Teste');
+      expect(res.body.fields).toHaveLength(1);
+    });
+
     it('deve criar um contrato a partir de um template no status DRAFT', async () => {
       const res = await request(app)
         .post('/api/contracts')
