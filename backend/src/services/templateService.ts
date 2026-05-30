@@ -15,30 +15,35 @@ export class TemplateService {
     });
   }
 
-  static async create(companyId: string, data: any) {
+  static async update(id: string, companyId: string, data: any) {
     const { name, content, fields = [] } = data;
-    console.log('TemplateService.create - Fields to create:', JSON.stringify(fields, null, 2));
-    try {
-      const template = await prisma.contractTemplate.create({
-        data: {
-          name,
-          content,
-          companyId,
-          fields: {
-            create: (fields || []).map((f: any) => ({
-              label: f.label,
-              key: f.key,
-              type: f.type || 'text',
-              required: f.required !== undefined ? f.required : true,
-            })),
-          },
+    
+    // First, delete old fields to replace with new ones (standard approach for dynamic fields)
+    await prisma.contractTemplateField.deleteMany({
+      where: { templateId: id },
+    });
+
+    return prisma.contractTemplate.update({
+      where: { id, companyId },
+      data: {
+        name,
+        content,
+        fields: {
+          create: (fields || []).map((f: any) => ({
+            label: f.label,
+            key: f.key,
+            type: f.type || 'text',
+            required: f.required !== undefined ? f.required : true,
+          })),
         },
-        include: { fields: true },
-      });
-      return template;
-    } catch (err) {
-      console.error('Prisma Error in TemplateService.create:', err);
-      throw err;
-    }
+      },
+      include: { fields: true },
+    });
+  }
+
+  static async delete(id: string, companyId: string) {
+    return prisma.contractTemplate.delete({
+      where: { id, companyId },
+    });
   }
 }

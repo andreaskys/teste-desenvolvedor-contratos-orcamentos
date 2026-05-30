@@ -8,26 +8,19 @@ datasource db {
 }
 
 model Company {
-  id        String   @id @default(uuid())
-  name      String
-  slug      String   @unique
-  cnpj      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  users             User[]
-  contracts         Contract[]
-  contractTemplates ContractTemplate[]
-  obras             Obra[]
+  id                String             @id @default(uuid())
+  name              String
+  slug              String             @unique
+  cnpj              String             @unique
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
   auditLogs         AuditLog[]
+  contractTemplates ContractTemplate[]
+  contracts         Contract[]
+  obras             Obra[]
+  users             User[]
 
   @@map("companies")
-}
-
-enum UserRole {
-  ADMIN
-  MANAGER
-  OPERATOR
 }
 
 model User {
@@ -39,74 +32,55 @@ model User {
   companyId String   @map("company_id")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  company Company @relation(fields: [companyId], references: [id])
+  company   Company  @relation(fields: [companyId], references: [id])
 
   @@map("users")
 }
 
-enum ContractStatus {
-  DRAFT
-  PENDING_SIGNATURE
-  ACTIVE
-  EXPIRED
-  CANCELLED
-}
-
 model ContractTemplate {
-  id        String   @id @default(uuid())
+  id        String                  @id @default(uuid())
   name      String
-  content   String   @db.Text
-  companyId String   @map("company_id")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  company Company                 @relation(fields: [companyId], references: [id])
-  fields  ContractTemplateField[]
+  content   String
+  companyId String                  @map("company_id")
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+  fields    ContractTemplateField[]
+  company   Company                 @relation(fields: [companyId], references: [id])
   contracts Contract[]
 
   @@map("contract_templates")
 }
 
 model ContractTemplateField {
-  id         String   @id @default(uuid())
-  templateId String   @map("template_id")
+  id         String           @id @default(uuid())
+  templateId String           @map("template_id")
   label      String
   key        String
-  type       String   @default("text") // text, number, date
-  required   Boolean  @default(true)
-
-  template ContractTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  type       String           @default("text")
+  required   Boolean          @default(true)
+  template   ContractTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
   @@map("contract_template_fields")
 }
 
 model Contract {
-  id          String         @id @default(uuid())
-  number      String         @unique
-  title       String
-  value       Decimal        @db.Decimal(15, 2)
-  startDate   DateTime       @map("start_date")
-  endDate     DateTime       @map("end_date")
-  status      ContractStatus @default(DRAFT)
-  companyId   String         @map("company_id")
-  templateId  String?        @map("template_id")
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-
+  id               String            @id @default(uuid())
+  number           String            @unique
+  title            String
+  value            Decimal           @db.Decimal(15, 2)
+  startDate        DateTime          @map("start_date")
+  endDate          DateTime          @map("end_date")
+  status           ContractStatus    @default(DRAFT)
+  companyId        String            @map("company_id")
+  templateId       String?           @map("template_id")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
   company          Company           @relation(fields: [companyId], references: [id])
   template         ContractTemplate? @relation(fields: [templateId], references: [id])
-  signatureRequest SignatureRequest?
   obras            Obra[]
+  signatureRequest SignatureRequest?
 
   @@map("contracts")
-}
-
-enum SignatureStatus {
-  AWAITING
-  SIGNED
-  EXPIRED
-  REJECTED
 }
 
 model SignatureRequest {
@@ -119,29 +93,27 @@ model SignatureRequest {
   logs       Json?           @default("[]")
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
-
-  contract Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  contract   Contract        @relation(fields: [contractId], references: [id], onDelete: Cascade)
 
   @@map("signature_requests")
 }
 
 model Obra {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  budget      Decimal  @db.Decimal(15, 2)
-  startDate   DateTime @map("start_date")
-  endDate     DateTime @map("end_date")
-  companyId   String   @map("company_id")
-  contractId  String   @map("contract_id")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  company        Company          @relation(fields: [companyId], references: [id])
-  contract       Contract         @relation(fields: [contractId], references: [id])
+  id             String          @id @default(uuid())
+  name           String
+  description    String?
+  budget         Decimal         @db.Decimal(15, 2)
+  startDate      DateTime        @map("start_date")
+  endDate        DateTime        @map("end_date")
+  companyId      String          @map("company_id")
+  contractId     String          @map("contract_id")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  costs          ObraCusto[]
   steps          ObraStep[]
   vistorias      ObraVistoria[]
-  costs          ObraCusto[]
+  company        Company         @relation(fields: [companyId], references: [id])
+  contract       Contract        @relation(fields: [contractId], references: [id])
   purchaseOrders PurchaseOrder[]
 
   @@map("obras")
@@ -156,8 +128,7 @@ model ObraStep {
   completed   Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
-  obra Obra @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  obra        Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
 
   @@map("obra_steps")
 }
@@ -165,12 +136,11 @@ model ObraStep {
 model ObraVistoria {
   id          String   @id @default(uuid())
   obraId      String   @map("obra_id")
-  type        String   // INICIAL, FINAL, INTERMEDIARIA
-  description String   @db.Text
+  type        String
+  description String
   photos      Json     @default("[]")
   createdAt   DateTime @default(now())
-
-  obra Obra @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  obra        Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
 
   @@map("obra_vistorias")
 }
@@ -178,13 +148,12 @@ model ObraVistoria {
 model ObraCusto {
   id          String   @id @default(uuid())
   obraId      String   @map("obra_id")
-  category    String   // Material, Mão de obra, Equipamentos, etc.
+  category    String
   description String
   amount      Decimal  @db.Decimal(15, 2)
   date        DateTime @default(now())
   createdAt   DateTime @default(now())
-
-  obra Obra @relation(fields: [obraId], references: [id], onDelete: Cascade)
+  obra        Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
 
   @@map("obra_custos")
 }
@@ -198,8 +167,7 @@ model PurchaseOrder {
   status    String   @default("PENDING")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  obra Obra @relation(fields: [obraId], references: [id])
+  obra      Obra     @relation(fields: [obraId], references: [id])
 
   @@map("purchase_orders")
 }
@@ -212,8 +180,7 @@ model AuditLog {
   resource  String
   payload   Json?
   createdAt DateTime @default(now())
-
-  company Company @relation(fields: [companyId], references: [id])
+  company   Company  @relation(fields: [companyId], references: [id])
 
   @@map("audit_logs")
 }
@@ -227,4 +194,25 @@ model Upload {
   createdAt DateTime @default(now())
 
   @@map("uploads")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  OPERATOR
+}
+
+enum ContractStatus {
+  DRAFT
+  PENDING_SIGNATURE
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum SignatureStatus {
+  AWAITING
+  SIGNED
+  EXPIRED
+  REJECTED
 }

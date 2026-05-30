@@ -23,6 +23,8 @@ routes.get('/contracts/:id', ContractController.show);
 routes.get('/templates', TemplateController.index);
 routes.get('/templates/:id', TemplateController.show);
 routes.post('/templates', TemplateController.store);
+routes.put('/templates/:id', TemplateController.update);
+routes.delete('/templates/:id', TemplateController.destroy);
 
 // Signatures
 routes.post('/signatures', SignatureController.store);

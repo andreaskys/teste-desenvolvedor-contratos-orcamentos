@@ -11,6 +11,7 @@ async function main() {
     where: { slug: 'construtora-modelo' },
     update: {},
     create: {
+      id: '00000000-0000-0000-0000-000000000001',
       name: 'Construtora Modelo Ltda',
       slug: 'construtora-modelo',
       cnpj: '12.345.678/0001-99',
@@ -22,6 +23,7 @@ async function main() {
     where: { email: 'admin@modelo.com' },
     update: {},
     create: {
+      id: '00000000-0000-0000-0000-000000000002',
       email: 'admin@modelo.com',
       password,
       name: 'Admin Growth',
