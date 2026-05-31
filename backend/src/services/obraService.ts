@@ -46,4 +46,22 @@ export class ObraService {
       },
     });
   }
+
+  static async addVistoria(obraId: string, data: any) {
+    return prisma.obraVistoria.create({
+      data: {
+        ...data,
+        obraId,
+      },
+    });
+  }
+
+  static async addPurchaseOrder(obraId: string, data: any) {
+    return prisma.purchaseOrder.create({
+      data: {
+        ...data,
+        obraId,
+      },
+    });
+  }
 }

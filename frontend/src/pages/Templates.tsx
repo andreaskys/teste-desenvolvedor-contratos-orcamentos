@@ -124,10 +124,10 @@ const Templates: React.FC = () => {
         </div>
         <button 
           onClick={() => handleOpenModal('create')}
-          className="apple-button-primary flex items-center gap-2"
+          className="apple-button-primary"
         >
-          <Plus size={20} />
-          Novo Template
+          <Plus size={20} strokeWidth={3} />
+          <span>Novo Template</span>
         </button>
       </div>
 

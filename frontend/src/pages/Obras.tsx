@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Plus, Search, HardHat, TrendingUp, Calendar, ArrowRight } from 'lucide-react';
 import api from '../api/client';
+import { useNavigate } from 'react-router-dom';
 
 interface Obra {
   id: string;
@@ -14,6 +15,7 @@ interface Obra {
 }
 
 const Obras: React.FC = () => {
+  const navigate = useNavigate();
   const [obras, setObras] = useState<Obra[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,9 +41,9 @@ const Obras: React.FC = () => {
           <h1 className="text-2xl font-bold text-gray-900">Obras</h1>
           <p className="text-gray-500">Acompanhamento operacional e financeiro dos projetos</p>
         </div>
-        <button className="apple-button-primary flex items-center gap-2">
-          <Plus size={20} />
-          Nova Obra
+        <button className="apple-button-primary">
+          <Plus size={20} strokeWidth={3} />
+          <span>Nova Obra</span>
         </button>
       </div>
 
@@ -52,7 +54,11 @@ const Obras: React.FC = () => {
           <div className="col-span-full py-12 text-center text-gray-500">Nenhuma obra cadastrada.</div>
         ) : (
           obras.map((obra) => (
-            <div key={obra.id} className="apple-card group hover:shadow-xl hover:shadow-blue-500/5 transition-all cursor-pointer">
+            <div 
+              key={obra.id} 
+              onClick={() => navigate(`/obras/${obra.id}`)}
+              className="apple-card group hover:shadow-xl hover:shadow-blue-500/5 transition-all cursor-pointer"
+            >
               <div className="flex justify-between items-start mb-6">
                 <div className="p-3 bg-orange-50 text-orange-500 rounded-2xl">
                   <HardHat size={24} />

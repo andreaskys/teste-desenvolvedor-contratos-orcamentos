@@ -1,31 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
   body {
-    @apply bg-gray-50 text-gray-900 font-sans antialiased;
+    /* Ultra-light base inspired by Apple */
+    @apply bg-[#F5F5F7] text-gray-900;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tight font-semibold text-gray-900;
   }
 }
 
 @layer components {
-  .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/20;
-  }
-  
-  .apple-card {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-6;
+  /* Core Liquid Glass effect - Optimized for performance */
+  .liquid-glass {
+    @apply bg-white/80 backdrop-blur-md border border-white/40 shadow-[0_4px_20px_rgba(0,0,0,0.02)] rounded-[24px];
   }
 
+  .liquid-glass-subtle {
+    @apply bg-white/60 backdrop-blur-sm border border-white/30 shadow-none rounded-[20px];
+  }
+
+  /* Refined Apple Card - Performance optimized */
+  .apple-card {
+    @apply bg-white rounded-[24px] shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-gray-100 p-6 transition-shadow duration-200;
+  }
+
+  .apple-card:hover {
+    @apply shadow-[0_10px_25px_rgba(0,0,0,0.04)];
+  }
+...
+
+  /* Refined Apple Buttons - 'Liquid Box' Style */
   .apple-button-primary {
-    @apply bg-blue-500 hover:bg-blue-600 text-white font-medium px-4 py-2 rounded-xl transition-all duration-200 active:scale-95;
+    @apply bg-[#0071E3] hover:bg-[#0077ED] text-white font-bold px-10 py-4 rounded-2xl 
+    shadow-[0_10px_25px_rgba(0,113,227,0.4)] hover:shadow-[0_15px_35px_rgba(0,113,227,0.5)] 
+    transition-all duration-300 ease-out active:scale-95 active:shadow-inner
+    flex items-center justify-center gap-3 border-2 border-[#0071E3]/20 hover:border-white/40;
   }
 
   .apple-button-secondary {
-    @apply bg-white hover:bg-gray-50 text-gray-700 font-medium px-4 py-2 rounded-xl border border-gray-200 transition-all duration-200 active:scale-95;
+    @apply bg-white hover:bg-gray-50 text-[#0071E3] font-bold px-8 py-3.5 rounded-2xl border-2 border-[#0071E3]/20 hover:border-[#0071E3] transition-all duration-300 ease-out active:scale-95 flex items-center justify-center gap-2 shadow-sm;
   }
 
-  .apple-input {
-    @apply bg-white/50 border border-gray-200 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all;
+  .apple-button-success {
+    @apply bg-[#34C759] hover:bg-[#30B753] text-white font-bold px-8 py-3.5 rounded-2xl shadow-[0_10px_25px_rgba(52,199,89,0.4)] hover:shadow-[0_12px_30px_rgba(52,199,89,0.5)] transition-all duration-300 ease-out active:scale-95 flex items-center justify-center gap-2 border border-white/20;
   }
+
+  .apple-button-success-outline {
+    @apply bg-white hover:bg-[#34C759]/5 text-[#34C759] font-bold px-8 py-3.5 rounded-2xl border-2 border-[#34C759]/40 hover:border-[#34C759] transition-all duration-300 ease-out active:scale-95 flex items-center justify-center gap-2 shadow-sm;
+  }
+
+  .apple-button-next-highlight {
+    @apply apple-button-primary border-4 border-[#34C759] shadow-[0_0_20px_rgba(52,199,89,0.3)];
+  }
+
+  /* Refined Inputs */
+  .apple-input {
+    @apply bg-white/60 backdrop-blur-sm border border-gray-200/50 rounded-2xl px-5 py-3.5 focus:outline-none focus:ring-4 focus:ring-[#0071E3]/20 focus:border-[#0071E3] transition-all text-sm placeholder:text-gray-400 w-full;
+  }
+  
+  /* Badges */
+  .apple-badge {
+    @apply px-3 py-1 text-[11px] font-bold rounded-full uppercase tracking-widest bg-white/60 backdrop-blur-sm border border-white/50 shadow-sm;
+  }
+}
+
+/* Scrollbar styling for webkit */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
 }

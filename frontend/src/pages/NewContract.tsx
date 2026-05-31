@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowRight, CheckCircle2, Info } from 'lucide-react';
+import { FileText, ArrowRight, CheckCircle2, Info, Plus } from 'lucide-react';
 import api from '../api/client';
 
 interface TemplateField {
@@ -41,6 +41,22 @@ const NewContract: React.FC = () => {
   const handleTemplateSelect = (template: Template) => {
     setSelectedTemplate(template);
     setStep(2);
+  };
+
+  const handleNextFromStep2 = () => {
+    if (!selectedTemplate || selectedTemplate.fields.length === 0) {
+      setStep(4);
+    } else {
+      setStep(3);
+    }
+  };
+
+  const handleBackFromStep4 = () => {
+    if (!selectedTemplate || selectedTemplate.fields.length === 0) {
+      setStep(2);
+    } else {
+      setStep(3);
+    }
   };
 
   const handleContractSubmit = async () => {
@@ -210,9 +226,9 @@ const NewContract: React.FC = () => {
                 </div>
               </div>
             </div>
-            <div className="flex justify-between pt-4">
+            <div className="flex justify-between items-center mt-10 pt-8 border-t border-gray-100">
               <button onClick={() => setStep(1)} className="apple-button-secondary">Voltar</button>
-              <button onClick={() => setStep(3)} className="apple-button-primary px-8">Próximo</button>
+              <button onClick={handleNextFromStep2} className="apple-button-success-outline">Próximo</button>
             </div>
           </div>
         )}
@@ -236,9 +252,9 @@ const NewContract: React.FC = () => {
                 </div>
               ))}
             </div>
-            <div className="flex justify-between pt-4">
+            <div className="flex justify-between items-center mt-10 pt-8 border-t border-gray-100">
               <button onClick={() => setStep(2)} className="apple-button-secondary">Voltar</button>
-              <button onClick={() => setStep(4)} className="apple-button-primary px-8">Revisar</button>
+              <button onClick={() => setStep(4)} className="apple-button-success-outline">Revisar Contrato</button>
             </div>
           </div>
         )}
@@ -284,9 +300,19 @@ const NewContract: React.FC = () => {
               "{selectedTemplate?.content.replace(/{{(.*?)}}/g, (match, key) => formData[key] || match)}"
             </div>
 
-            <div className="flex justify-between pt-4">
-              <button onClick={() => setStep(3)} className="apple-button-secondary">Voltar</button>
-              <button onClick={handleContractSubmit} className="apple-button-primary px-8">Salvar Contrato</button>
+            <div className="flex justify-between items-center mt-12 pt-8 border-t border-gray-100">
+              <button 
+                onClick={handleBackFromStep4} 
+                className="apple-button-secondary"
+              >
+                Voltar
+              </button>
+              <button 
+                onClick={handleContractSubmit} 
+                className="apple-button-success-outline"
+              >
+                Finalizar e Salvar
+              </button>
             </div>
           </div>
         )}

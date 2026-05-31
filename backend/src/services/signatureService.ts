@@ -1,5 +1,7 @@
 import prisma from '../utils/prisma';
 import { SignatureStatus, ContractStatus } from '@prisma/client';
+import { NotificationService } from './notificationService';
+import { createAuditLog } from '../utils/audit';
 
 export class SignatureService {
   static async createRequest(contractId: string, data: any) {
@@ -10,7 +12,7 @@ export class SignatureService {
         contractId,
         email,
         phone,
-        link: `http://localhost:5173/sign/${Math.random().toString(36).substring(7)}`,
+        link: `http://localhost:5173/sign/{{id}}`, // ID will be filled after creation or we can use the UUID
         status: SignatureStatus.AWAITING,
         logs: [
           { event: 'request_created', channel, timestamp: new Date() },
@@ -19,15 +21,28 @@ export class SignatureService {
       },
     });
 
-    await prisma.contract.update({
+    const finalLink = `http://localhost:5173/sign/${request.id}`;
+    await prisma.signatureRequest.update({
+      where: { id: request.id },
+      data: { link: finalLink }
+    });
+
+    const contract = await prisma.contract.update({
       where: { id: contractId },
       data: { status: ContractStatus.PENDING_SIGNATURE },
     });
 
+    // Create Audit Log for Sending
+    await createAuditLog(
+      contract.companyId,
+      'USER_ID_MOCKED', // In a real scenario, pass the user ID
+      'SEND_FOR_SIGNATURE',
+      'CONTRACT',
+      { contractId, channel, target: email || phone }
+    );
+
     // Simulated Dispatch
     console.log(`[Signature] Enviando link via ${channel}: ${request.link}`);
-    if (channel === 'BOTH' || channel === 'EMAIL') console.log(`[Email] Destinatário: ${email}`);
-    if (channel === 'BOTH' || channel === 'WHATSAPP') console.log(`[WhatsApp] Destinatário: ${phone}`);
 
     return request;
   }
@@ -35,6 +50,7 @@ export class SignatureService {
   static async sign(requestId: string) {
     const request = await prisma.signatureRequest.findUnique({
       where: { id: requestId },
+      include: { contract: true }
     });
 
     if (!request) throw new Error('Pedido de assinatura não encontrado.');
@@ -52,8 +68,27 @@ export class SignatureService {
 
     await prisma.contract.update({
       where: { id: updatedRequest.contractId },
-      data: { status: ContractStatus.ACTIVE },
+      data: { status: ContractStatus.SIGNED },
     });
+
+    // Create Notification with embedded contractId in message for easy parsing, or ideally in a payload field.
+    // For simplicity, we will append it to the message or title if we don't have a payload field in the DB schema.
+    // Since we don't have a JSON payload field on Notifications, I will encode the ID in the message string:
+    await NotificationService.create(
+      request.contract.companyId,
+      'Contrato Assinado',
+      `O contrato ${request.contract.number} foi assinado por todas as partes.|ID:${request.contract.id}`,
+      'SUCCESS'
+    );
+
+    // Create Audit Log
+    await createAuditLog(
+      request.contract.companyId,
+      'SYSTEM',
+      'SIGNED',
+      'CONTRACT',
+      { contractId: request.contract.id, number: request.contract.number }
+    );
 
     return updatedRequest;
   }

@@ -3,11 +3,32 @@ import { ContractStatus } from '@prisma/client';
 
 export class ContractService {
   static async listAll(companyId: string) {
-    return prisma.contract.findMany({
+    const contracts = await prisma.contract.findMany({
       where: { companyId },
       include: { template: true, signatureRequest: true },
       orderBy: { createdAt: 'desc' },
     });
+
+    // Check for expiration
+    const now = new Date();
+    const expiredIds = contracts
+      .filter(c => c.status !== ContractStatus.SIGNED && c.status !== ContractStatus.EXPIRED && c.endDate < now)
+      .map(c => c.id);
+
+    if (expiredIds.length > 0) {
+      await prisma.contract.updateMany({
+        where: { id: { in: expiredIds } },
+        data: { status: ContractStatus.EXPIRED }
+      });
+      // Re-fetch to get updated status
+      return prisma.contract.findMany({
+        where: { companyId },
+        include: { template: true, signatureRequest: true },
+        orderBy: { createdAt: 'desc' },
+      });
+    }
+
+    return contracts;
   }
 
   static async create(companyId: string, data: any) {
@@ -44,7 +65,11 @@ export class ContractService {
   static async getById(id: string, companyId: string) {
     return prisma.contract.findFirst({
       where: { id, companyId },
-      include: { template: true, signatureRequest: true, obras: true },
+      include: { 
+        template: { include: { fields: true } }, 
+        signatureRequest: true, 
+        obras: true
+      },
     });
   }
 
@@ -52,6 +77,12 @@ export class ContractService {
     return prisma.contract.updateMany({
       where: { id, companyId },
       data,
+    });
+  }
+
+  static async delete(id: string, companyId: string) {
+    return prisma.contract.deleteMany({
+      where: { id, companyId },
     });
   }
 }

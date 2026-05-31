@@ -12,25 +12,29 @@ const Layout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-[#F5F5F7] flex w-full overflow-x-hidden">
       <Sidebar />
-      <main className="flex-1 ml-64 p-8">
-        <header className="mb-8 flex justify-between items-center">
-          <div>
-            <h2 className="text-gray-500 font-medium">Bem-vindo de volta,</h2>
-            <h1 className="text-2xl font-bold text-gray-900">{user?.name}</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-bold text-gray-900">{user?.company.name}</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wider">{user?.role}</p>
+      <main className="flex-1 lg:pl-72 w-full min-h-screen flex flex-col">
+        <div className="p-6 md:p-10 w-full max-w-[1600px] mx-auto flex-1">
+          <header className="mb-10 flex flex-col md:flex-row gap-6 justify-between items-start md:items-center bg-white/60 backdrop-blur-md px-8 py-6 rounded-[24px] border border-white/40 shadow-sm">
+            <div>
+              <h2 className="text-gray-500 font-medium text-sm">Bem-vindo de volta,</h2>
+              <h1 className="text-3xl font-bold text-gray-900 tracking-tight mt-1">{user?.name}</h1>
             </div>
-            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-              {user?.name.charAt(0)}
+            <div className="flex items-center gap-5">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-bold text-gray-900">{user?.company.name}</p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">{user?.role}</p>
+              </div>
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0071E3] to-[#409CFF] flex items-center justify-center text-white text-xl font-bold shadow-[0_8px_20px_rgba(0,113,227,0.2)]">
+                {user?.name.charAt(0)}
+              </div>
             </div>
+          </header>
+          <div className="w-full">
+            <Outlet />
           </div>
-        </header>
-        <Outlet />
+        </div>
       </main>
     </div>
   );

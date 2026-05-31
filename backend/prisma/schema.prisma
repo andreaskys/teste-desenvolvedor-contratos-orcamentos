@@ -19,8 +19,22 @@ model Company {
   contracts         Contract[]
   obras             Obra[]
   users             User[]
+  notifications     Notification[]
 
   @@map("companies")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  companyId String   @map("company_id")
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  type      String   @default("INFO")
+  createdAt DateTime @default(now())
+  company   Company  @relation(fields: [companyId], references: [id])
+
+  @@map("notifications")
 }
 
 model User {
@@ -209,6 +223,7 @@ enum ContractStatus {
   DRAFT
   PENDING_SIGNATURE
   ACTIVE
+  SIGNED
   EXPIRED
   CANCELLED
 }

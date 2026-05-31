@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FileText, Send, CheckCircle, Clock, Mail, MessageSquare, ArrowLeft, Eye, Download } from 'lucide-react';
+import { 
+  FileText, Send, CheckCircle, Clock, Mail, 
+  MessageSquare, ArrowLeft, Download, Copy, 
+  ExternalLink, X, Info 
+} from 'lucide-react';
 import api from '../api/client';
 
 const ContractDetails: React.FC = () => {
@@ -9,6 +13,7 @@ const ContractDetails: React.FC = () => {
   const [contract, setContract] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showSignModal, setShowSignModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<'content' | 'audit'>('content');
   const [signData, setSignData] = useState({ email: '', phone: '', channel: 'BOTH' });
 
   useEffect(() => {
@@ -25,7 +30,6 @@ const ContractDetails: React.FC = () => {
         ...signData,
       });
       setShowSignModal(false);
-      // Reload contract
       const res = await api.get(`/contracts/${id}`);
       setContract(res.data);
     } catch (err) {
@@ -34,35 +38,54 @@ const ContractDetails: React.FC = () => {
   };
 
   const handleSignSimulated = async () => {
-    try {
-      if (contract.signatureRequest) {
-        await api.post(`/signatures/${contract.signatureRequest.id}/sign`);
-        const res = await api.get(`/contracts/${id}`);
-        setContract(res.data);
-      }
-    } catch (err) {
-      console.error(err);
+    if (contract.signatureRequest) {
+      window.open(`/sign/${contract.signatureRequest.id}`, '_blank');
     }
   };
 
-  if (loading) return <div className="p-8 text-center">Carregando...</div>;
-  if (!contract) return <div className="p-8 text-center">Contrato não encontrado.</div>;
+  const handleDownloadPDF = async () => {
+    try {
+      const response = await api.get(`/contracts/${id}/download`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `contrato-${contract.number}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error('Failed to download PDF', err);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    alert('Link copiado!');
+  };
+
+  if (loading) return <div className="p-8 text-center font-medium text-gray-500">Carregando detalhes...</div>;
+  if (!contract) return <div className="p-8 text-center text-red-500 font-bold">Contrato não encontrado.</div>;
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-12">
       <div className="flex items-center justify-between">
-        <button onClick={() => navigate('/contracts')} className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors">
+        <button onClick={() => navigate('/contracts')} className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors font-medium">
           <ArrowLeft size={20} />
           Voltar para listagem
         </button>
         <div className="flex gap-3">
-          <button className="apple-button-secondary flex items-center gap-2">
-            <Download size={18} /> Exportar PDF
+          <button 
+            onClick={handleDownloadPDF}
+            className="apple-button-secondary"
+          >
+            <Download size={18} /> Baixar PDF
           </button>
           {contract.status === 'DRAFT' && (
             <button 
               onClick={() => setShowSignModal(true)}
-              className="apple-button-primary flex items-center gap-2"
+              className="apple-button-primary"
             >
               <Send size={18} /> Enviar para Assinatura
             </button>
@@ -70,9 +93,9 @@ const ContractDetails: React.FC = () => {
           {contract.status === 'PENDING_SIGNATURE' && (
             <button 
               onClick={handleSignSimulated}
-              className="bg-green-500 hover:bg-green-600 text-white font-medium px-4 py-2 rounded-xl flex items-center gap-2"
+              className="apple-button-success shadow-lg shadow-[#34C759]/20"
             >
-              <CheckCircle size={18} /> Simular Assinatura (QA)
+              <ExternalLink size={18} /> Assinar Documento
             </button>
           )}
         </div>
@@ -80,34 +103,93 @@ const ContractDetails: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <div className="apple-card">
-            <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-100">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-50 text-blue-500 rounded-2xl">
-                  <FileText size={32} />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">{contract.title}</h1>
-                  <p className="text-gray-500">{contract.number}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
-                {contract.status === 'ACTIVE' && (
-                  <span className="px-3 py-1 bg-green-50 text-green-600 border border-green-100 rounded-lg font-bold text-sm">ATIVO</span>
-                )}
-                {contract.status === 'DRAFT' && (
-                  <span className="px-3 py-1 bg-gray-50 text-gray-500 border border-gray-100 rounded-lg font-bold text-sm">RASCUNHO</span>
-                )}
-                {contract.status === 'PENDING_SIGNATURE' && (
-                  <span className="px-3 py-1 bg-orange-50 text-orange-600 border border-orange-100 rounded-lg font-bold text-sm">AGUARDANDO ASSINATURA</span>
-                )}
-              </div>
+          <div className="apple-card p-0 overflow-hidden">
+            <div className="flex border-b border-gray-100 bg-gray-50/50 px-4">
+              <button 
+                onClick={() => setActiveTab('content')}
+                className={`px-6 py-4 text-sm font-bold transition-all border-b-2 ${activeTab === 'content' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-400'}`}
+              >
+                Conteúdo do Documento
+              </button>
+              <button 
+                onClick={() => setActiveTab('audit')}
+                className={`px-6 py-4 text-sm font-bold transition-all border-b-2 ${activeTab === 'audit' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-400'}`}
+              >
+                Histórico de Auditoria
+              </button>
             </div>
 
-            <div className="prose prose-blue max-w-none text-gray-700 min-h-[400px] bg-gray-50/50 p-8 rounded-2xl border border-dashed border-gray-200">
-              {contract.template?.content || "Conteúdo do contrato..."}
-            </div>
+            {activeTab === 'content' ? (
+              <div className="p-8">
+                <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-100">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-blue-50 text-blue-500 rounded-2xl">
+                      <FileText size={32} />
+                    </div>
+                    <div>
+                      <h1 className="text-2xl font-bold text-gray-900">{contract.title}</h1>
+                      <p className="text-gray-500">{contract.number}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">Status</p>
+                    {(contract.status === 'ACTIVE' || contract.status === 'SIGNED') && (
+                      <span className="apple-badge bg-[#34C759]/10 text-[#34C759] border-[#34C759]/20 shadow-none">ASSINADO</span>
+                    )}
+                    {contract.status === 'DRAFT' && (
+                      <span className="apple-badge bg-gray-100 text-gray-500 border-gray-200 shadow-none">RASCUNHO</span>
+                    )}
+                    {contract.status === 'PENDING_SIGNATURE' && (
+                      <span className="apple-badge bg-[#FF9500]/10 text-[#FF9500] border-[#FF9500]/20 shadow-none">AGUARDANDO ASSINATURA</span>
+                    )}
+                    {contract.status === 'EXPIRED' && (
+                      <span className="apple-badge bg-[#FF3B30]/10 text-[#FF3B30] border-[#FF3B30]/20 shadow-none">EXPIRADO</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="prose prose-sm md:prose-base max-w-none text-gray-700 min-h-[500px] bg-white p-10 rounded-[24px] border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+                  {contract.template?.content || "Conteúdo do contrato..."}
+                </div>
+              </div>
+            ) : (
+              <div className="p-8">
+                <div className="space-y-8">
+                  {contract.auditLogs?.map((log: any, idx: number) => (
+                    <div key={log.id} className="relative pl-8 pb-8 last:pb-0">
+                      {idx !== contract.auditLogs.length - 1 && (
+                        <div className="absolute left-3 top-6 bottom-0 w-0.5 bg-gray-100" />
+                      )}
+                      <div className="absolute left-0 top-1 w-6 h-6 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center z-10">
+                        <div className="w-2 h-2 rounded-full bg-blue-500" />
+                      </div>
+                      <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="text-xs font-black text-blue-500 uppercase tracking-widest">{log.action}</span>
+                          <span className="text-[10px] text-gray-400 font-bold">{new Date(log.createdAt).toLocaleString()}</span>
+                        </div>
+                        <p className="text-sm text-gray-700 font-medium">Ação realizada no recurso {log.resource}</p>
+                        {log.payload && (
+                          <div className="mt-3 grid grid-cols-2 gap-2">
+                            {Object.entries(log.payload).map(([key, value]: [string, any]) => (
+                              <div key={key} className="text-[10px]">
+                                <span className="text-gray-400 uppercase font-bold">{key}:</span>
+                                <span className="ml-1 text-gray-600 truncate inline-block max-w-full align-bottom">{JSON.stringify(value)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {(!contract.auditLogs || contract.auditLogs.length === 0) && (
+                    <div className="text-center py-12 text-gray-400 italic text-sm">
+                      Nenhum registro de auditoria encontrado.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -151,8 +233,17 @@ const ContractDetails: React.FC = () => {
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-xl space-y-3">
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <Mail size={14} /> Link enviado via E-mail
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <Mail size={14} /> Link enviado via E-mail
+                    </div>
+                    <button 
+                      onClick={() => copyToClipboard(contract.signatureRequest.link)}
+                      className="p-1.5 hover:bg-gray-200 rounded-lg text-gray-400 transition-colors"
+                      title="Copiar Link"
+                    >
+                      <Copy size={14} />
+                    </button>
                   </div>
                   {contract.signatureRequest.phone && (
                     <div className="flex items-center gap-2 text-xs text-gray-500">

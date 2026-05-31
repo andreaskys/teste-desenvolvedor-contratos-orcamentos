@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { ObraService } from '../services/obraService';
+import { createAuditLog } from '../utils/audit';
 
 export class ObraController {
   static async index(req: AuthRequest, res: Response) {
@@ -15,6 +16,15 @@ export class ObraController {
   static async store(req: AuthRequest, res: Response) {
     try {
       const obra = await ObraService.create(req.user!.companyId, req.body);
+      
+      await createAuditLog(
+        req.user!.companyId,
+        req.user!.userId,
+        'CREATE',
+        'OBRA',
+        { obraId: obra.id, name: obra.name }
+      );
+
       return res.status(201).json(obra);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
@@ -28,6 +38,60 @@ export class ObraController {
       return res.json(obra);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
+    }
+  }
+
+  static async addCost(req: AuthRequest, res: Response) {
+    try {
+      const cost = await ObraService.addCost(req.params.id as string, req.body);
+      
+      await createAuditLog(
+        req.user!.companyId,
+        req.user!.userId,
+        'ADD_COST',
+        'OBRA',
+        { obraId: req.params.id, amount: cost.amount }
+      );
+
+      return res.status(201).json(cost);
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
+  static async addStep(req: AuthRequest, res: Response) {
+    try {
+      const step = await ObraService.addStep(req.params.id as string, req.body);
+      return res.status(201).json(step);
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
+  static async addVistoria(req: AuthRequest, res: Response) {
+    try {
+      const vistoria = await ObraService.addVistoria(req.params.id as string, req.body);
+      return res.status(201).json(vistoria);
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
+  static async addPurchaseOrder(req: AuthRequest, res: Response) {
+    try {
+      const po = await ObraService.addPurchaseOrder(req.params.id as string, req.body);
+      
+      await createAuditLog(
+        req.user!.companyId,
+        req.user!.userId,
+        'CREATE_PO',
+        'OBRA',
+        { obraId: req.params.id, poNumber: po.number }
+      );
+
+      return res.status(201).json(po);
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
     }
   }
 }
