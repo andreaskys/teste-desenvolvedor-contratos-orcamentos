@@ -232,6 +232,10 @@ const ObraDetails: React.FC = () => {
 
   const totalCosts = calculateTotalCosts();
   const costPercentage = (totalCosts / Number(obra.budget)) * 100;
+  const activeStepIndex = workflowConfig.findIndex(s => s.id === activeTab);
+  const furthestCompletedIndex = workflowConfig.reduce((max, step, idx) => {
+    return getStepStatus(step.id).isCompleted ? idx : max;
+  }, 0);
 
   return (
     <div className="space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-2 duration-700">
@@ -322,11 +326,10 @@ const ObraDetails: React.FC = () => {
           {/* Stepper Visual */}
           <div className="flex items-center justify-between relative mb-8 overflow-x-auto pb-4 no-scrollbar">
             <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-gray-100 rounded-full z-0 min-w-[600px]" />
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-[#0071E3] rounded-full z-0 transition-all duration-500 min-w-[600px]" style={{ width: `${(activeStepIndex / (workflowConfig.length - 1)) * 100}%` }} />
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-[#34C759] rounded-full z-0 transition-all duration-500 min-w-[600px]" style={{ width: `${(furthestCompletedIndex / (workflowConfig.length - 1)) * 100}%` }} />
             
             {workflowConfig.map((step, index) => {
-              const isCompleted = index < activeStepIndex;
-              const isActive = index === activeStepIndex;
+              const { isCompleted, isActive } = getStepStatus(step.id);
               return (
                 <div 
                   key={step.id}
@@ -335,7 +338,7 @@ const ObraDetails: React.FC = () => {
                 >
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm border-4 ${
                     isActive ? 'bg-[#0071E3] text-white border-white scale-110 shadow-lg shadow-[#0071E3]/30' :
-                    isCompleted ? 'bg-[#34C759] text-white border-white' :
+                    isCompleted ? 'bg-[#34C759] text-white border-white shadow-md shadow-[#34C759]/20' :
                     'bg-white text-gray-300 border-gray-100 group-hover:border-[#0071E3]/30 group-hover:text-[#0071E3]'
                   }`}>
                     {isCompleted ? <Check size={20} strokeWidth={3} /> : step.icon}
