@@ -196,12 +196,42 @@ const ObraDetails: React.FC = () => {
     } finally { setActionLoading(false); }
   };
 
+  const getStepStatus = (stepId: WorkflowStep) => {
+    if (!obra) return { isCompleted: false, isActive: activeTab === stepId };
+    
+    let isCompleted = false;
+    switch (stepId) {
+      case 'dashboard':
+        isCompleted = true;
+        break;
+      case 'vistoria-inicial':
+        isCompleted = obra.vistorias.some(v => v.type.includes('Inicial'));
+        break;
+      case 'execucao':
+        isCompleted = obra.steps.length > 0 && obra.steps.every(s => s.completed);
+        break;
+      case 'custos':
+        isCompleted = obra.costs.length > 0;
+        break;
+      case 'oc':
+        isCompleted = obra.purchaseOrders.length > 0;
+        break;
+      case 'manutencoes':
+        isCompleted = obra.manutencoes.length > 0;
+        break;
+      case 'vistoria-final':
+        isCompleted = obra.vistorias.some(v => v.type.includes('Final'));
+        break;
+    }
+
+    return { isCompleted, isActive: activeTab === stepId };
+  };
+
   if (loading) return <div className="p-8 text-center">Carregando detalhes da obra...</div>;
   if (!obra) return <div className="p-8 text-center text-red-500">Obra não encontrada.</div>;
 
   const totalCosts = calculateTotalCosts();
   const costPercentage = (totalCosts / Number(obra.budget)) * 100;
-  const activeStepIndex = workflowConfig.findIndex(s => s.id === activeTab);
 
   return (
     <div className="space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-2 duration-700">
