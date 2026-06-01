@@ -8,8 +8,7 @@ import api from '../api/client';
 import { useNavigate } from 'react-router-dom';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, PieChart, Pie, Cell, Legend,
-  AreaChart, Area
+  ResponsiveContainer, PieChart, Pie, Cell, Legend
 } from 'recharts';
 import Button from '../components/Button';
 
@@ -102,7 +101,7 @@ const Dashboard: React.FC = () => {
             </div>
             <BarChart3 className="text-gray-300" size={24} />
           </div>
-          <div className="p-8 h-[400px]">
+          <div className="p-8" style={{ height: '400px', minHeight: '400px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={distributions.obras} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F2F2F7" />
@@ -125,7 +124,7 @@ const Dashboard: React.FC = () => {
           <h3 className="font-bold text-gray-900 text-xl mb-8 tracking-tight flex items-center gap-2">
             <PieIcon size={20} className="text-blue-500" /> Distribuição
           </h3>
-          <div className="flex-1 min-h-[300px]">
+          <div className="flex-1" style={{ minHeight: '300px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie

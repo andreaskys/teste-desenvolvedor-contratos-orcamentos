@@ -4,10 +4,11 @@ import {
   HardHat, TrendingUp, Calendar, CheckCircle2, 
   Plus, AlertCircle, Camera, DollarSign, ListChecks,
   ChevronRight, ArrowLeft, ShoppingCart, Check, BarChart2,
-  Clock, FileText, X, History
+  Clock, FileText, X, History, RefreshCw
 } from 'lucide-react';
 import api from '../api/client';
 import Button from '../components/Button';
+import toast from 'react-hot-toast';
 
 interface Obra {
   id: string;
@@ -59,12 +60,14 @@ const ObraDetails: React.FC = () => {
   const [costData, setCostData] = useState({ category: 'Material', description: '', amount: '', date: new Date().toISOString().split('T')[0] });
   const [stepData, setStepData] = useState({ title: '', description: '', order: '' });
   const [vistoriaData, setVistoriaData] = useState({ type: 'Vistoria Inicial', description: '' });
-  const [poData, setPoData] = useState({ number: `OC-${Math.floor(1000 + Math.random() * 9000)}`, vendor: '', amount: '', payingCnpj: '' });
+  const [poData, setPoData] = useState({ number: '', vendor: '', amount: '', payingCnpj: '' });
   const [manutencaoData, setManutencaoData] = useState({ description: '', provider: '', cost: '', date: new Date().toISOString().split('T')[0] });
 
   useEffect(() => {
     fetchObra();
   }, [id]);
+
+  const generatePoNumber = () => `OC-${Math.floor(10000 + Math.random() * 90000)}`;
 
   const fetchObra = async () => {
     try {
@@ -72,6 +75,7 @@ const ObraDetails: React.FC = () => {
       setObra(response.data);
     } catch (error) {
       console.error('Failed to fetch obra', error);
+      toast.error('Erro ao carregar obra.');
     } finally {
       setLoading(false);
     }
@@ -86,13 +90,23 @@ const ObraDetails: React.FC = () => {
 
   const handleAddCost = async (e: React.FormEvent) => {
     e.preventDefault();
+    const amount = parseFloat(costData.amount);
+    if (isNaN(amount) || amount <= 0) return toast.error('Informe um valor válido.');
+    
     setActionLoading(true);
     try {
-      await api.post(`/obras/${id}/costs`, { ...costData, amount: parseFloat(costData.amount) });
+      await api.post(`/obras/${id}/costs`, { 
+        ...costData, 
+        amount,
+        date: new Date(costData.date).toISOString() 
+      });
       await fetchObra();
       setCostModal(false);
       setCostData({ category: 'Material', description: '', amount: '', date: new Date().toISOString().split('T')[0] });
-    } catch (err) { alert('Erro ao lançar custo.'); } finally { setActionLoading(false); }
+      toast.success('Custo lançado com sucesso!');
+    } catch (err: any) { 
+      toast.error(err.response?.data?.error || 'Erro ao lançar custo.'); 
+    } finally { setActionLoading(false); }
   };
 
   const handleAddStep = async (e: React.FormEvent) => {
@@ -103,14 +117,18 @@ const ObraDetails: React.FC = () => {
       await fetchObra();
       setStepModal(false);
       setStepData({ title: '', description: '', order: '' });
-    } catch (err) { alert('Erro ao adicionar etapa.'); } finally { setActionLoading(false); }
+      toast.success('Etapa adicionada!');
+    } catch (err: any) { 
+      toast.error(err.response?.data?.error || 'Erro ao adicionar etapa.'); 
+    } finally { setActionLoading(false); }
   };
 
   const handleToggleStep = async (stepId: string, completed: boolean) => {
     try {
       await api.patch(`/obras/${id}/steps/${stepId}`, { completed: !completed });
       await fetchObra();
-    } catch (err) { alert('Erro ao atualizar etapa.'); }
+      toast.success('Status atualizado!');
+    } catch (err) { toast.error('Erro ao atualizar etapa.'); }
   };
 
   const handleAddVistoria = async (e: React.FormEvent) => {
@@ -135,34 +153,47 @@ const ObraDetails: React.FC = () => {
       setVistoriaModal(false);
       setVistoriaData({ type: 'Vistoria Inicial', description: '' });
       setSelectedFile(null);
-    } catch (err) { 
-      console.error(err);
-      alert('Erro ao registrar vistoria.'); 
-    } finally { 
-      setActionLoading(false); 
-    }
+      toast.success('Vistoria registrada!');
+    } catch (err: any) { 
+      toast.error(err.response?.data?.error || 'Erro ao registrar vistoria.'); 
+    } finally { setActionLoading(false); }
   };
 
   const handleAddPO = async (e: React.FormEvent) => {
     e.preventDefault();
+    const amount = parseFloat(poData.amount);
+    if (isNaN(amount) || amount <= 0) return toast.error('Informe um valor válido.');
+
     setActionLoading(true);
     try {
-      await api.post(`/obras/${id}/purchase-orders`, { ...poData, amount: parseFloat(poData.amount) });
+      await api.post(`/obras/${id}/purchase-orders`, { ...poData, amount });
       await fetchObra();
       setPoModal(false);
-      setPoData({ number: `OC-${Math.floor(1000 + Math.random() * 9000)}`, vendor: '', amount: '', payingCnpj: '' });
-    } catch (err) { alert('Erro ao gerar O.C.'); } finally { setActionLoading(false); }
+      toast.success('O.C. emitida com sucesso!');
+    } catch (err: any) { 
+      toast.error(err.response?.data?.error || 'Erro ao gerar O.C.'); 
+    } finally { setActionLoading(false); }
   };
 
   const handleAddManutencao = async (e: React.FormEvent) => {
     e.preventDefault();
+    const cost = parseFloat(manutencaoData.cost);
+    if (isNaN(cost) || cost <= 0) return toast.error('Informe um valor válido.');
+
     setActionLoading(true);
     try {
-      await api.post(`/obras/${id}/manutencoes`, { ...manutencaoData, cost: parseFloat(manutencaoData.cost) });
+      await api.post(`/obras/${id}/manutencoes`, { 
+        ...manutencaoData, 
+        cost,
+        date: new Date(manutencaoData.date).toISOString()
+      });
       await fetchObra();
       setManutencaoModal(false);
       setManutencaoData({ description: '', provider: '', cost: '', date: new Date().toISOString().split('T')[0] });
-    } catch (err) { alert('Erro ao registrar manutenção.'); } finally { setActionLoading(false); }
+      toast.success('Manutenção registrada!');
+    } catch (err: any) { 
+      toast.error(err.response?.data?.error || 'Erro ao registrar manutenção.'); 
+    } finally { setActionLoading(false); }
   };
 
   if (loading) return <div className="p-8 text-center">Carregando detalhes da obra...</div>;
@@ -565,7 +596,10 @@ const ObraDetails: React.FC = () => {
                   <h4 className="font-bold text-gray-900 text-xl tracking-tight">Ordens de Compra (O.C.)</h4>
                   <p className="text-sm text-gray-500 font-medium mt-1">Gestão de suprimentos e aprovação de materiais.</p>
                 </div>
-                <Button onClick={() => setPoModal(true)} leftIcon={<Plus size={18} />}>
+                <Button onClick={() => {
+                  setPoData({ ...poData, number: generatePoNumber() });
+                  setPoModal(true);
+                }} leftIcon={<Plus size={18} />}>
                   Gerar O.C.
                 </Button>
               </div>
@@ -827,7 +861,10 @@ const ObraDetails: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Número</label>
-                  <input readOnly className="apple-input w-full bg-gray-50" value={poData.number} />
+                  <div className="flex gap-2">
+                    <input readOnly className="apple-input w-full bg-gray-50 text-xs" value={poData.number} />
+                    <Button variant="ghost" size="sm" type="button" onClick={() => setPoData({...poData, number: generatePoNumber()})} className="px-2"><RefreshCw size={14} /></Button>
+                  </div>
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest">CNPJ Pagador</label>

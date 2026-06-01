@@ -55,6 +55,7 @@ export class ObraController {
 
       return res.status(201).json(cost);
     } catch (error: any) {
+      console.error('[ObraController.addCost]', error.message);
       return res.status(400).json({ error: error.message });
     }
   }
@@ -64,6 +65,7 @@ export class ObraController {
       const step = await ObraService.addStep(req.params.id as string, req.body);
       return res.status(201).json(step);
     } catch (error: any) {
+      console.error('[ObraController.addStep]', error.message);
       return res.status(400).json({ error: error.message });
     }
   }
@@ -73,6 +75,7 @@ export class ObraController {
       const step = await ObraService.updateStep(req.params.stepId as string, req.body);
       return res.json(step);
     } catch (error: any) {
+      console.error('[ObraController.updateStep]', error.message);
       return res.status(400).json({ error: error.message });
     }
   }
@@ -82,6 +85,7 @@ export class ObraController {
       const vistoria = await ObraService.addVistoria(req.params.id as string, req.body);
       return res.status(201).json(vistoria);
     } catch (error: any) {
+      console.error('[ObraController.addVistoria]', error.message);
       return res.status(400).json({ error: error.message });
     }
   }
@@ -100,6 +104,7 @@ export class ObraController {
 
       return res.status(201).json(po);
     } catch (error: any) {
+      console.error('[ObraController.addPurchaseOrder]', error.message);
       return res.status(400).json({ error: error.message });
     }
   }
@@ -118,6 +123,7 @@ export class ObraController {
 
       return res.status(201).json(manutencao);
     } catch (error: any) {
+      console.error('[ObraController.addManutencao]', error.message);
       return res.status(400).json({ error: error.message });
     }
   }
