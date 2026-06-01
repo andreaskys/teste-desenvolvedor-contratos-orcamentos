@@ -68,6 +68,15 @@ export class ObraController {
     }
   }
 
+  static async updateStep(req: AuthRequest, res: Response) {
+    try {
+      const step = await ObraService.updateStep(req.params.stepId as string, req.body);
+      return res.json(step);
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
   static async addVistoria(req: AuthRequest, res: Response) {
     try {
       const vistoria = await ObraService.addVistoria(req.params.id as string, req.body);
@@ -90,6 +99,24 @@ export class ObraController {
       );
 
       return res.status(201).json(po);
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
+  static async addManutencao(req: AuthRequest, res: Response) {
+    try {
+      const manutencao = await ObraService.addManutencao(req.params.id as string, req.body);
+      
+      await createAuditLog(
+        req.user!.companyId,
+        req.user!.userId,
+        'ADD_MANUTENCAO',
+        'OBRA',
+        { obraId: req.params.id, manutencaoId: manutencao.id }
+      );
+
+      return res.status(201).json(manutencao);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });
     }

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { CheckCircle, Shield, FileText, Lock, MousePointer2 } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { CheckCircle, Shield, Lock, MousePointer2 } from 'lucide-react';
 import api from '../api/client';
+import Button from '../components/Button';
 
 const PublicSign: React.FC = () => {
   const { id } = useParams(); // Using signatureRequest ID
@@ -31,6 +32,22 @@ const PublicSign: React.FC = () => {
     } finally {
       setSigning(false);
     }
+  };
+
+  const renderContent = () => {
+    if (!request?.contract?.template) return "Conteúdo do contrato sendo processado...";
+    
+    let content = request.contract.template.content;
+    const filledFields = request.contract.filledFields || {};
+
+    // Replace placeholders {{key}} with actual values
+    Object.keys(filledFields).forEach(key => {
+      const value = filledFields[key];
+      const regex = new RegExp(`{{${key}}}`, 'g');
+      content = content.replace(regex, value || `[${key}]`);
+    });
+
+    return content;
   };
 
   if (loading) return (
@@ -95,8 +112,8 @@ const PublicSign: React.FC = () => {
                 <p className="text-gray-400 font-semibold tracking-widest uppercase text-xs">Contrato: {request.contract.number}</p>
               </div>
 
-              <div className="prose prose-sm md:prose-base text-gray-700 leading-relaxed font-medium">
-                {request.contract.template?.content || "Conteúdo do contrato sendo processado..."}
+              <div className="prose prose-sm md:prose-base text-gray-700 leading-relaxed font-medium whitespace-pre-wrap">
+                {renderContent()}
                 {/* Simulated contract text */}
                 <div className="mt-12 space-y-6 text-gray-600 bg-gray-50/50 p-6 rounded-3xl border border-gray-100">
                   <p><strong>Cláusula 1ª -</strong> Este documento formaliza o acordo entre as partes conforme as diretrizes operacionais do sistema Growth SaaS.</p>
@@ -126,20 +143,14 @@ const PublicSign: React.FC = () => {
               Ao clicar no botão abaixo, você concorda com os termos do contrato e confirma sua identidade eletronicamente.
             </p>
             
-            <button 
+            <Button 
               onClick={handleSign}
-              disabled={signing}
-              className="w-full apple-button-primary py-4 text-base shadow-[0_8px_20px_rgba(0,113,227,0.3)] hover:shadow-[0_12px_24px_rgba(0,113,227,0.4)]"
+              isLoading={signing}
+              className="w-full py-4 text-base"
+              leftIcon={<MousePointer2 size={20} />}
             >
-              {signing ? (
-                <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  <MousePointer2 size={20} className="group-hover:scale-110 transition-transform" />
-                  Assinar Agora
-                </>
-              )}
-            </button>
+              Assinar Agora
+            </Button>
 
             <div className="mt-10 pt-8 border-t border-gray-200/50 space-y-5">
               <div className="flex items-center gap-4 text-xs text-gray-500 font-semibold">

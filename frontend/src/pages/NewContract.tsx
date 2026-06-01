@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, ArrowRight, CheckCircle2, Info, Plus } from 'lucide-react';
 import api from '../api/client';
+import Button from '../components/Button';
 
 interface TemplateField {
   id: string;
@@ -116,12 +117,13 @@ const NewContract: React.FC = () => {
                 <div className="col-span-full p-12 text-center bg-gray-50 rounded-3xl border border-dashed border-gray-200">
                   <FileText size={40} className="mx-auto mb-4 text-gray-300" />
                   <p className="text-gray-500 mb-4">Você ainda não tem templates cadastrados.</p>
-                  <button 
+                  <Button 
+                    variant="secondary"
                     onClick={() => navigate('/templates')}
-                    className="apple-button-secondary inline-flex items-center gap-2"
+                    leftIcon={<Plus size={18} />}
                   >
-                    <Plus size={18} /> Criar Primeiro Template
-                  </button>
+                    Criar Primeiro Template
+                  </Button>
                 </div>
               ) : (
                 templates.map((t) => (
@@ -227,8 +229,19 @@ const NewContract: React.FC = () => {
               </div>
             </div>
             <div className="flex justify-between items-center mt-10 pt-8 border-t border-gray-100">
-              <button onClick={() => setStep(1)} className="apple-button-secondary">Voltar</button>
-              <button onClick={handleNextFromStep2} className="apple-button-success-outline">Próximo</button>
+              <Button 
+                variant="secondary"
+                onClick={() => setStep(1)}
+              >
+                Voltar
+              </Button>
+              <Button 
+                variant="outline"
+                className="text-green-600 border-green-200 hover:border-green-500 hover:bg-green-50"
+                onClick={handleNextFromStep2}
+              >
+                Próximo
+              </Button>
             </div>
           </div>
         )}
@@ -253,8 +266,19 @@ const NewContract: React.FC = () => {
               ))}
             </div>
             <div className="flex justify-between items-center mt-10 pt-8 border-t border-gray-100">
-              <button onClick={() => setStep(2)} className="apple-button-secondary">Voltar</button>
-              <button onClick={() => setStep(4)} className="apple-button-success-outline">Revisar Contrato</button>
+              <Button 
+                variant="secondary"
+                onClick={() => setStep(2)}
+              >
+                Voltar
+              </Button>
+              <Button 
+                variant="outline"
+                className="text-green-600 border-green-200 hover:border-green-500 hover:bg-green-50"
+                onClick={() => setStep(4)}
+              >
+                Revisar Contrato
+              </Button>
             </div>
           </div>
         )}
@@ -301,18 +325,19 @@ const NewContract: React.FC = () => {
             </div>
 
             <div className="flex justify-between items-center mt-12 pt-8 border-t border-gray-100">
-              <button 
+              <Button 
+                variant="secondary"
                 onClick={handleBackFromStep4} 
-                className="apple-button-secondary"
               >
                 Voltar
-              </button>
-              <button 
+              </Button>
+              <Button 
+                variant="outline"
+                className="text-green-600 border-green-200 hover:border-green-500 hover:bg-green-50"
                 onClick={handleContractSubmit} 
-                className="apple-button-success-outline"
               >
                 Finalizar e Salvar
-              </button>
+              </Button>
             </div>
           </div>
         )}

@@ -1,68 +1,98 @@
-# Growth SaaS - Controle de Contratos e Gestão Orçamentária
+# Growth SaaS - Gestão de Contratos e Obras
 
-Plataforma multi-tenant completa para gestão de contratos, assinaturas eletrônicas e acompanhamento operacional de obras. Desenvolvido com foco em alta performance e design minimalista inspirado nos padrões da Apple.
+Plataforma integrada para gestão de contratos, controle operacional de obras e automação de assinaturas eletrônicas.
 
-## 🚀 Stack Tecnológica
+## 🚀 Tecnologias Utilizadas
 
-- **Frontend:** React, Vite, TailwindCSS, Zustand, Lucide React.
-- **Backend:** Node.js, Express, Prisma ORM.
-- **Banco de Dados:** PostgreSQL + pgvector (Docker).
-- **Autenticação:** JWT (JSON Web Token).
+### Backend
+- **Node.js + Express** (API REST)
+- **Prisma ORM** (Modelagem e Migrations)
+- **PostgreSQL** (Banco de Dados)
+- **pgvector** (Busca Semântica por IA)
+- **node-cron** (Monitoramento de Prazos)
+- **Multer** (Infraestrutura de Upload)
 
-## 🛠️ Como Executar o Projeto
+### Frontend
+- **React + Vite**
+- **TailwindCSS** (UI/UX Apple Style)
+- **Zustand** (Gerenciamento de Estado)
+- **Recharts** (Dashboard Analítico)
+- **Lucide React** (Iconografia)
 
-### 1. Pré-requisitos
+---
+
+## 🛠️ Configuração e Instalação
+
+### 1. Requisitos Próximos
 - Node.js (v18+)
-- Docker e Docker Compose
-- NPM ou Yarn
+- Docker e Docker Compose (para o banco de dados)
 
-### 2. Configuração do Banco de Dados
-Na raiz do projeto, suba o container do banco de dados:
+### 2. Clonar e Instalar
+```bash
+git clone <url-do-repositorio>
+cd teste-desenvolvedor-contratos-orcamentos
+```
+
+### 3. Banco de Dados (Docker)
+Na raiz do projeto:
 ```bash
 docker-compose up -d
 ```
 
-### 3. Configuração do Backend
+### 4. Configuração do Backend
 ```bash
 cd backend
 npm install
-# Gere o cliente Prisma
-npm run prisma:generate
-# Rode as migrations para criar as tabelas
-npm run prisma:migrate
-# Popule o banco com dados iniciais (Admin: admin@modelo.com / admin123)
+cp .env.example .env
+```
+*Ajuste as variáveis no `.env` se necessário.*
+
+**Executar Migrations e Seed:**
+```bash
+npx prisma migrate dev
 npm run prisma:seed
-# Inicie o servidor
-npm run dev
 ```
 
-### 4. Configuração do Frontend
+### 5. Configuração do Frontend
+```bash
+cd ../frontend
+npm install
+cp .env.example .env
+```
+
+---
+
+## 🏃 Executando o Projeto
+
+### Iniciar Backend
+```bash
+cd backend
+npm run dev
+```
+O servidor rodará em `http://localhost:3001`.
+
+### Iniciar Frontend
 ```bash
 cd frontend
-npm install
-# Inicie o ambiente de desenvolvimento
 npm run dev
 ```
+O portal estará disponível em `http://localhost:5173`.
 
-O sistema estará acessível em: `http://localhost:5173`
+---
 
-## 📂 Estrutura do Projeto
-
-### Backend
-- `/prisma`: Schema do banco e scripts de seed.
-- `/src/controllers`: Lógica de controle de rotas.
-- `/src/services`: Lógica de negócio e integração com banco.
-- `/src/middlewares`: Middlewares de autenticação e tenant.
-
-### Frontend
-- `/src/components`: Componentes UI reutilizáveis (Apple Design).
-- `/src/pages`: Páginas da aplicação (Dashboard, Contratos, Obras).
-- `/src/store`: Estado global com Zustand.
-- `/src/api`: Cliente Axios configurado.
-
-## 🔑 Credenciais de Acesso (Seed)
-- **Usuário:** `admin@modelo.com`
+## 🔑 Credenciais de Teste
+Acesse o sistema utilizando o usuário administrador criado pelo seed:
+- **Email:** `admin@growth.com.br`
 - **Senha:** `admin123`
 
 ---
-Desenvolvido por Gemini CLI - 2026.
+
+## 🌟 Diferenciais Implementados
+- **Busca Semântica (IA):** Utilize a barra de "Pesquisa IA" na tela de Templates para buscar contratos por conceito.
+- **Isolamento Multi-tenant:** Dados estritamente protegidos por empresa (ID do Tenant).
+- **Roteiro de Obra:** Controle completo de execução, vistorias fotográficas e financeiro.
+- **Alertas Automáticos:** Notificações de vencimento geradas por jobs em background.
+- **Fila de Assinaturas:** Monitoramento de envios com suporte a Webhooks.
+
+---
+Desenvolvido por **Andreas** - 2026.

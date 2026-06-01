@@ -52,11 +52,19 @@
   }
 
   .apple-button-success {
-    @apply bg-[#34C759] hover:bg-[#30B753] text-white font-bold px-8 py-3.5 rounded-2xl shadow-[0_10px_25px_rgba(52,199,89,0.4)] hover:shadow-[0_12px_30px_rgba(52,199,89,0.5)] transition-all duration-300 ease-out active:scale-95 flex items-center justify-center gap-2 border border-white/20;
+    @apply bg-[#34C759] hover:bg-[#30B753] text-white font-bold px-10 py-4 rounded-2xl shadow-[0_10px_25px_rgba(52,199,89,0.4)] hover:shadow-[0_15px_35px_rgba(52,199,89,0.5)] transition-all duration-300 ease-out active:scale-95 active:shadow-inner flex items-center justify-center gap-3 border-2 border-[#34C759]/20 hover:border-white/40;
   }
 
   .apple-button-success-outline {
     @apply bg-white hover:bg-[#34C759]/5 text-[#34C759] font-bold px-8 py-3.5 rounded-2xl border-2 border-[#34C759]/40 hover:border-[#34C759] transition-all duration-300 ease-out active:scale-95 flex items-center justify-center gap-2 shadow-sm;
+  }
+
+  .apple-button-destructive {
+    @apply bg-[#FF3B30] hover:bg-[#FF453A] text-white font-bold px-10 py-4 rounded-2xl shadow-[0_10px_25px_rgba(255,59,48,0.4)] hover:shadow-[0_15px_35px_rgba(255,59,48,0.5)] transition-all duration-300 ease-out active:scale-95 active:shadow-inner flex items-center justify-center gap-3 border-2 border-[#FF3B30]/20 hover:border-white/40;
+  }
+
+  .apple-button-warning {
+    @apply bg-[#FF9500] hover:bg-[#FF9F0A] text-white font-bold px-10 py-4 rounded-2xl shadow-[0_10px_25px_rgba(255,149,0,0.4)] hover:shadow-[0_15px_35px_rgba(255,149,0,0.5)] transition-all duration-300 ease-out active:scale-95 active:shadow-inner flex items-center justify-center gap-3 border-2 border-[#FF9500]/20 hover:border-white/40;
   }
 
   .apple-button-next-highlight {

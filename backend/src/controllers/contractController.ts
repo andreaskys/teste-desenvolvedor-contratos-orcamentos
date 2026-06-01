@@ -73,6 +73,41 @@ export class ContractController {
     }
   }
 
+  static async update(req: AuthRequest, res: Response) {
+    try {
+      const id = req.params.id as string;
+      const companyId = req.user!.companyId;
+      
+      const contract = await prisma.contract.findFirst({
+        where: { id, companyId }
+      });
+
+      if (!contract) return res.status(404).json({ error: 'Contract not found' });
+
+      const data = { ...req.body };
+      if (data.startDate) data.startDate = new Date(data.startDate);
+      if (data.endDate) data.endDate = new Date(data.endDate);
+      
+      // Remove actionType before saving to DB
+      const actionType = data.actionType || 'UPDATE';
+      delete data.actionType;
+
+      await ContractService.update(id, companyId, data);
+      
+      await createAuditLog(
+        companyId,
+        req.user!.userId,
+        'UPDATE',
+        'CONTRACT',
+        { contractId: id, number: contract.number, actionType }
+      );
+
+      return res.status(200).json({ message: 'Contract updated successfully' });
+    } catch (error: any) {
+      return res.status(400).json({ error: error.message });
+    }
+  }
+
   static async destroy(req: AuthRequest, res: Response) {
     try {
       const id = req.params.id as string;

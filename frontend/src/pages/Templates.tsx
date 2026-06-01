@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, FileText, Trash2, Edit3, Save, X, Eye } from 'lucide-react';
+import { Plus, FileText, Trash2, Edit3, Save, X, Eye, Search } from 'lucide-react';
 import api from '../api/client';
+import Button from '../components/Button';
 
 interface TemplateField {
   label: string;
@@ -19,6 +20,7 @@ interface Template {
 const Templates: React.FC = () => {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalModal] = useState<'create' | 'edit' | 'view'>('create');
   const [error, setError] = useState('');
@@ -34,26 +36,34 @@ const Templates: React.FC = () => {
     fetchTemplates();
   }, []);
 
-  const fetchTemplates = async () => {
+  const fetchTemplates = async (search = '') => {
+    setLoading(true);
     try {
-      const res = await api.get('/templates');
+      const res = await api.get('/templates', {
+        params: { search: search || undefined }
+      });
       setTemplates(res.data);
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error('Failed to fetch templates', error);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchTemplates(searchTerm);
+  };
+
   const handleOpenModal = (mode: 'create' | 'edit' | 'view', template?: Template) => {
-    setError('');
     setModalModal(mode);
+    setError('');
     if (template) {
       setSelectedTemplate(template);
       setFormTemplate({
         name: template.name,
         content: template.content,
-        fields: template.fields,
+        fields: [...template.fields],
       });
     } else {
       setSelectedTemplate(null);
@@ -77,18 +87,12 @@ const Templates: React.FC = () => {
 
   const handleSave = async () => {
     if (!formTemplate.name || !formTemplate.content) {
-      setError('Por favor, preencha o nome e o conteúdo do template.');
+      setError('Nome e conteúdo são obrigatórios.');
       return;
     }
 
-    if (formTemplate.fields.some(f => !f.label || !f.key)) {
-      setError('Por favor, preencha todos os campos da definição de campos.');
-      return;
-    }
-
+    setLoading(true);
     try {
-      setLoading(true);
-      setError('');
       if (modalMode === 'create') {
         await api.post('/templates', formTemplate);
       } else {
@@ -97,39 +101,55 @@ const Templates: React.FC = () => {
       setShowModal(false);
       fetchTemplates();
     } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.error || 'Erro ao salvar o template. Verifique os campos.');
+      setError(err.response?.data?.error || 'Erro ao salvar template.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Tem certeza que deseja excluir este template?')) return;
+    if (!confirm('Deseja excluir este template?')) return;
     try {
       await api.delete(`/templates/${id}`);
       fetchTemplates();
     } catch (err) {
-      console.error(err);
       alert('Erro ao excluir template.');
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-8 pb-12 animate-in fade-in slide-in-from-bottom-2 duration-700">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Biblioteca de Templates</h1>
-          <p className="text-gray-500">Gerencie os modelos de contrato da sua empresa</p>
+          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Templates</h1>
+          <p className="text-gray-500 mt-1 font-medium">Gerencie modelos de contrato com busca semântica inteligente.</p>
         </div>
-        <button 
+        <Button 
           onClick={() => handleOpenModal('create')}
-          className="apple-button-primary"
+          leftIcon={<Plus size={20} strokeWidth={3} />}
         >
-          <Plus size={20} strokeWidth={3} />
-          <span>Novo Template</span>
-        </button>
+          Novo Template
+        </Button>
       </div>
+
+      {/* Semantic Search Bar */}
+      <form onSubmit={handleSearch} className="relative group">
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <Search className="h-5 w-5 text-gray-400 group-focus-within:text-blue-500 transition-colors" />
+        </div>
+        <input
+          type="text"
+          placeholder="Busque por conceito (ex: 'contrato para reforma' ou 'aluguel de máquinas')..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="apple-input w-full pl-12 pr-32 py-4 bg-white shadow-sm border-gray-100 hover:border-blue-200 transition-all text-lg"
+        />
+        <div className="absolute inset-y-0 right-0 flex items-center pr-2">
+          <Button type="submit" size="sm" className="rounded-xl h-10">
+            Pesquisa IA
+          </Button>
+        </div>
+      </form>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {loading && templates.length === 0 ? (
@@ -137,8 +157,8 @@ const Templates: React.FC = () => {
         ) : templates.length === 0 ? (
           <div className="col-span-full apple-card py-12 text-center text-gray-500">
             <FileText size={48} className="mx-auto mb-4 text-gray-200" />
-            <p>Nenhum template cadastrado ainda.</p>
-            <button onClick={() => handleOpenModal('create')} className="text-blue-500 font-bold mt-2">Clique aqui para criar o primeiro</button>
+            <p>Nenhum template encontrado.</p>
+            <button onClick={() => { setSearchTerm(''); fetchTemplates(); }} className="text-blue-500 font-bold mt-2">Limpar busca</button>
           </div>
         ) : (
           templates.map((t) => (
@@ -148,33 +168,39 @@ const Templates: React.FC = () => {
                   <FileText size={24} />
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button 
+                  <Button 
+                    variant="ghost"
+                    size="sm"
                     onClick={() => handleOpenModal('view', t)}
                     className="p-2 text-gray-400 hover:text-gray-900 bg-gray-50 rounded-lg"
                     title="Visualizar"
                   >
                     <Eye size={18} />
-                  </button>
-                  <button 
+                  </Button>
+                  <Button 
+                    variant="ghost"
+                    size="sm"
                     onClick={() => handleOpenModal('edit', t)}
                     className="p-2 text-gray-400 hover:text-blue-500 bg-gray-50 rounded-lg"
                     title="Editar"
                   >
                     <Edit3 size={18} />
-                  </button>
-                  <button 
+                  </Button>
+                  <Button 
+                    variant="ghost"
+                    size="sm"
                     onClick={() => handleDelete(t.id)}
                     className="p-2 text-gray-400 hover:text-red-500 bg-gray-50 rounded-lg"
                     title="Excluir"
                   >
                     <Trash2 size={18} />
-                  </button>
+                  </Button>
                 </div>
               </div>
               <h3 className="text-lg font-bold text-gray-900 mb-2 truncate pr-8">{t.name}</h3>
               <p className="text-sm text-gray-500 line-clamp-3 mb-4">{t.content}</p>
               <div className="pt-4 border-t border-gray-50 flex justify-between items-center">
-                <span className="text-xs font-bold text-gray-400 uppercase">{t.fields.length} campos dinâmicos</span>
+                <span className="text-xs font-bold text-gray-400 uppercase">{t.fields?.length || 0} campos dinâmicos</span>
                 <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">ID: {t.id.split('-')[0]}</span>
               </div>
             </div>
@@ -291,13 +317,22 @@ const Templates: React.FC = () => {
             </div>
 
             <div className="flex gap-3 mt-8">
-              <button onClick={() => setShowModal(false)} className="apple-button-secondary flex-1">
+              <Button 
+                variant="secondary"
+                onClick={() => setShowModal(false)}
+                className="flex-1"
+              >
                 {modalMode === 'view' ? 'Fechar' : 'Cancelar'}
-              </button>
+              </Button>
               {modalMode !== 'view' && (
-                <button onClick={handleSave} className="apple-button-primary flex-1 flex items-center justify-center gap-2">
-                  <Save size={18} /> {modalMode === 'create' ? 'Salvar Template' : 'Atualizar Template'}
-                </button>
+                <Button 
+                  onClick={handleSave}
+                  className="flex-1"
+                  leftIcon={<Save size={18} />}
+                  isLoading={loading}
+                >
+                  {modalMode === 'create' ? 'Salvar Template' : 'Atualizar Template'}
+                </Button>
               )}
             </div>
           </div>

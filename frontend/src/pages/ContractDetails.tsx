@@ -6,6 +6,8 @@ import {
   ExternalLink, X, Info 
 } from 'lucide-react';
 import api from '../api/client';
+import toast from 'react-hot-toast';
+import Button from '../components/Button';
 
 const ContractDetails: React.FC = () => {
   const { id } = useParams();
@@ -15,6 +17,7 @@ const ContractDetails: React.FC = () => {
   const [showSignModal, setShowSignModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'content' | 'audit'>('content');
   const [signData, setSignData] = useState({ email: '', phone: '', channel: 'BOTH' });
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     api.get(`/contracts/${id}`).then((res) => {
@@ -24,6 +27,7 @@ const ContractDetails: React.FC = () => {
   }, [id]);
 
   const handleSendSignature = async () => {
+    setActionLoading(true);
     try {
       await api.post('/signatures', {
         contractId: id,
@@ -32,9 +36,28 @@ const ContractDetails: React.FC = () => {
       setShowSignModal(false);
       const res = await api.get(`/contracts/${id}`);
       setContract(res.data);
+      toast.success('Solicitação de assinatura enviada!');
     } catch (err) {
-      console.error(err);
+      toast.error('Erro ao enviar solicitação.');
+    } finally {
+      setActionLoading(false);
     }
+  };
+
+  const renderContent = () => {
+    if (!contract?.template) return "Conteúdo do contrato...";
+    
+    let content = contract.template.content;
+    const filledFields = contract.filledFields || {};
+
+    // Replace placeholders {{key}} with actual values
+    Object.keys(filledFields).forEach(key => {
+      const value = filledFields[key];
+      const regex = new RegExp(`{{${key}}}`, 'g');
+      content = content.replace(regex, value || `[${key}]`);
+    });
+
+    return content;
   };
 
   const handleSignSimulated = async () => {
@@ -62,7 +85,7 @@ const ContractDetails: React.FC = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    alert('Link copiado!');
+    toast.success('Link copiado!');
   };
 
   if (loading) return <div className="p-8 text-center font-medium text-gray-500">Carregando detalhes...</div>;
@@ -76,27 +99,29 @@ const ContractDetails: React.FC = () => {
           Voltar para listagem
         </button>
         <div className="flex gap-3">
-          <button 
+          <Button 
+            variant="secondary"
             onClick={handleDownloadPDF}
-            className="apple-button-secondary"
+            leftIcon={<Download size={18} />}
           >
-            <Download size={18} /> Baixar PDF
-          </button>
+            Baixar PDF
+          </Button>
           {contract.status === 'DRAFT' && (
-            <button 
+            <Button 
               onClick={() => setShowSignModal(true)}
-              className="apple-button-primary"
+              leftIcon={<Send size={18} />}
             >
-              <Send size={18} /> Enviar para Assinatura
-            </button>
+              Enviar para Assinatura
+            </Button>
           )}
           {contract.status === 'PENDING_SIGNATURE' && (
-            <button 
+            <Button 
               onClick={handleSignSimulated}
-              className="apple-button-success shadow-lg shadow-[#34C759]/20"
+              variant="success"
+              leftIcon={<ExternalLink size={18} />}
             >
-              <ExternalLink size={18} /> Assinar Documento
-            </button>
+              Assinar Documento
+            </Button>
           )}
         </div>
       </div>
@@ -148,8 +173,8 @@ const ContractDetails: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="prose prose-sm md:prose-base max-w-none text-gray-700 min-h-[500px] bg-white p-10 rounded-[24px] border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
-                  {contract.template?.content || "Conteúdo do contrato..."}
+                <div className="prose prose-sm md:prose-base max-w-none text-gray-700 min-h-[500px] bg-white p-10 rounded-[24px] border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] whitespace-pre-wrap">
+                  {renderContent()}
                 </div>
               </div>
             ) : (
@@ -323,8 +348,8 @@ const ContractDetails: React.FC = () => {
               </div>
             </div>
             <div className="flex gap-3 mt-8">
-              <button onClick={() => setShowSignModal(false)} className="apple-button-secondary flex-1">Cancelar</button>
-              <button onClick={handleSendSignature} className="apple-button-primary flex-1">Enviar Agora</button>
+              <Button variant="ghost" className="flex-1" onClick={() => setShowSignModal(false)}>Cancelar</Button>
+              <Button className="flex-1" isLoading={actionLoading} onClick={handleSendSignature}>Enviar Agora</Button>
             </div>
           </div>
         </div>

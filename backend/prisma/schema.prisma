@@ -1,10 +1,12 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [vector]
 }
 
 model Company {
@@ -17,9 +19,11 @@ model Company {
   auditLogs         AuditLog[]
   contractTemplates ContractTemplate[]
   contracts         Contract[]
-  obras             Obra[]
-  users             User[]
   notifications     Notification[]
+  obras             Obra[]
+  signatureRequests SignatureRequest[]
+  uploads           Upload[]
+  users             User[]
 
   @@map("companies")
 }
@@ -58,10 +62,12 @@ model ContractTemplate {
   companyId String                  @map("company_id")
   createdAt DateTime                @default(now())
   updatedAt DateTime                @updatedAt
+  embedding Unsupported("vector")?
   fields    ContractTemplateField[]
   company   Company                 @relation(fields: [companyId], references: [id])
   contracts Contract[]
 
+  @@index([companyId])
   @@map("contract_templates")
 }
 
@@ -81,22 +87,25 @@ model Contract {
   id               String            @id @default(uuid())
   number           String            @unique
   title            String
-  relatedParty     String            @default("Não Informado") @map("related_party")
-  contractType     String            @default("Outros") @map("contract_type")
   value            Decimal           @db.Decimal(15, 2)
   startDate        DateTime          @map("start_date")
   endDate          DateTime          @map("end_date")
   status           ContractStatus    @default(DRAFT)
-  filledFields     Json?             @default("{}") @map("filled_fields")
   companyId        String            @map("company_id")
   templateId       String?           @map("template_id")
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
+  contractType     String            @default("Outros") @map("contract_type")
+  filledFields     Json?             @default("{}") @map("filled_fields")
+  relatedParty     String            @default("Não Informado") @map("related_party")
   company          Company           @relation(fields: [companyId], references: [id])
   template         ContractTemplate? @relation(fields: [templateId], references: [id])
   obras            Obra[]
   signatureRequest SignatureRequest?
 
+  @@index([companyId])
+  @@index([status])
+  @@index([endDate])
   @@map("contracts")
 }
 
@@ -110,29 +119,35 @@ model SignatureRequest {
   logs       Json?           @default("[]")
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
+  channel    String          @default("EMAIL")
+  companyId  String          @map("company_id")
+  company    Company         @relation(fields: [companyId], references: [id])
   contract   Contract        @relation(fields: [contractId], references: [id], onDelete: Cascade)
 
   @@map("signature_requests")
 }
 
 model Obra {
-  id             String          @id @default(uuid())
+  id             String           @id @default(uuid())
   name           String
   description    String?
-  budget         Decimal         @db.Decimal(15, 2)
-  startDate      DateTime        @map("start_date")
-  endDate        DateTime        @map("end_date")
-  companyId      String          @map("company_id")
-  contractId     String          @map("contract_id")
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  budget         Decimal          @db.Decimal(15, 2)
+  startDate      DateTime         @map("start_date")
+  endDate        DateTime         @map("end_date")
+  companyId      String           @map("company_id")
+  contractId     String           @map("contract_id")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
   costs          ObraCusto[]
+  manutencoes    ObraManutencao[]
   steps          ObraStep[]
   vistorias      ObraVistoria[]
-  company        Company         @relation(fields: [companyId], references: [id])
-  contract       Contract        @relation(fields: [contractId], references: [id])
+  company        Company          @relation(fields: [companyId], references: [id])
+  contract       Contract         @relation(fields: [contractId], references: [id])
   purchaseOrders PurchaseOrder[]
 
+  @@index([companyId])
+  @@index([contractId])
   @@map("obras")
 }
 
@@ -175,16 +190,30 @@ model ObraCusto {
   @@map("obra_custos")
 }
 
+model ObraManutencao {
+  id          String   @id @default(uuid())
+  obraId      String   @map("obra_id")
+  description String
+  date        DateTime @default(now())
+  provider    String?
+  cost        Decimal? @db.Decimal(15, 2)
+  createdAt   DateTime @default(now())
+  obra        Obra     @relation(fields: [obraId], references: [id], onDelete: Cascade)
+
+  @@map("obra_manutencoes")
+}
+
 model PurchaseOrder {
-  id        String   @id @default(uuid())
-  obraId    String   @map("obra_id")
-  number    String   @unique
-  vendor    String
-  amount    Decimal  @db.Decimal(15, 2)
-  status    String   @default("PENDING")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  obra      Obra     @relation(fields: [obraId], references: [id])
+  id         String   @id @default(uuid())
+  obraId     String   @map("obra_id")
+  number     String   @unique
+  vendor     String
+  amount     Decimal  @db.Decimal(15, 2)
+  status     String   @default("PENDING")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  payingCnpj String?  @map("paying_cnpj")
+  obra       Obra     @relation(fields: [obraId], references: [id])
 
   @@map("purchase_orders")
 }
@@ -199,16 +228,22 @@ model AuditLog {
   createdAt DateTime @default(now())
   company   Company  @relation(fields: [companyId], references: [id])
 
+  @@index([companyId])
+  @@index([resource])
   @@map("audit_logs")
 }
 
 model Upload {
-  id        String   @id @default(uuid())
-  filename  String
-  path      String
-  mimetype  String
-  size      Int
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  filename   String
+  path       String
+  mimetype   String
+  size       Int
+  createdAt  DateTime @default(now())
+  companyId  String   @map("company_id")
+  entityId   String?  @map("entity_id")
+  entityType String?  @map("entity_type")
+  company    Company  @relation(fields: [companyId], references: [id])
 
   @@map("uploads")
 }
@@ -223,9 +258,9 @@ enum ContractStatus {
   DRAFT
   PENDING_SIGNATURE
   ACTIVE
-  SIGNED
   EXPIRED
   CANCELLED
+  SIGNED
 }
 
 enum SignatureStatus {

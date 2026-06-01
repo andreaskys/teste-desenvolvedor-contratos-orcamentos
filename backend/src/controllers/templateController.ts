@@ -2,10 +2,30 @@ import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { TemplateService } from '../services/templateService';
 import prisma from '../utils/prisma';
+import { generateEmbedding } from '../utils/embeddings';
 
 export class TemplateController {
   static async index(req: AuthRequest, res: Response) {
     try {
+      const { search } = req.query;
+      
+      if (search && String(search).trim()) {
+        const query = String(search);
+        const embedding = await generateEmbedding(query);
+        const vectorString = `[${embedding.join(',')}]`;
+        
+        // Semantic search using pgvector similarity (<=> operator)
+        const templates = await prisma.$queryRawUnsafe(`
+          SELECT id, name, content, company_id as "companyId", created_at as "createdAt"
+          FROM contract_templates
+          WHERE company_id = '${req.user!.companyId}'
+          ORDER BY embedding <=> '${vectorString}'::vector
+          LIMIT 10
+        `);
+        
+        return res.json(templates);
+      }
+
       const templates = await TemplateService.listAll(req.user!.companyId);
       return res.json(templates);
     } catch (error: any) {
@@ -47,6 +67,20 @@ export class TemplateController {
         },
         include: { fields: true },
       });
+
+      // Generate and update embedding
+      try {
+        const embedding = await generateEmbedding(`${name} ${content}`);
+        const vectorString = `[${embedding.join(',')}]`;
+        await prisma.$executeRawUnsafe(`
+          UPDATE contract_templates 
+          SET embedding = '${vectorString}'::vector 
+          WHERE id = '${template.id}'
+        `);
+      } catch (embErr) {
+        console.error('[TemplateController.store] Embedding generation failed:', embErr);
+      }
+
       return res.status(201).json(template);
     } catch (error: any) {
       console.error('[TemplateController.store] Error:', error.message);
@@ -57,6 +91,22 @@ export class TemplateController {
   static async update(req: AuthRequest, res: Response) {
     try {
       const template = await TemplateService.update(req.params.id as string, req.user!.companyId, req.body);
+      
+      // Update embedding if core content changed
+      if (req.body.name || req.body.content) {
+        try {
+          const embedding = await generateEmbedding(`${req.body.name || template.name} ${req.body.content || template.content}`);
+          const vectorString = `[${embedding.join(',')}]`;
+          await prisma.$executeRawUnsafe(`
+            UPDATE contract_templates 
+            SET embedding = '${vectorString}'::vector 
+            WHERE id = '${template.id}'
+          `);
+        } catch (embErr) {
+          console.error('[TemplateController.update] Embedding generation failed:', embErr);
+        }
+      }
+
       return res.json(template);
     } catch (error: any) {
       console.error('[TemplateController.update] Error:', error.message);

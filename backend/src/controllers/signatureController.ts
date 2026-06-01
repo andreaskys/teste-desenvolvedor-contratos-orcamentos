@@ -4,6 +4,19 @@ import { SignatureService } from '../services/signatureService';
 import prisma from '../utils/prisma';
 
 export class SignatureController {
+  static async index(req: AuthRequest, res: Response) {
+    try {
+      const requests = await prisma.signatureRequest.findMany({
+        where: { companyId: req.user!.companyId },
+        include: { contract: true },
+        orderBy: { createdAt: 'desc' }
+      });
+      return res.json(requests);
+    } catch (error: any) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
   static async store(req: AuthRequest, res: Response) {
     try {
       const { contractId, email, phone, channel } = req.body;
@@ -41,7 +54,11 @@ export class SignatureController {
 
   static async sign(req: Request, res: Response) {
     try {
-      const request = await SignatureService.sign(req.params.id as string);
+      const metadata = {
+        ip: String(req.ip || req.headers['x-forwarded-for'] || 'unknown'),
+        userAgent: String(req.headers['user-agent'] || 'unknown')
+      };
+      const request = await SignatureService.sign(req.params.id as string, metadata);
       return res.json(request);
     } catch (error: any) {
       return res.status(400).json({ error: error.message });

@@ -7,12 +7,20 @@ export class SignatureService {
   static async createRequest(contractId: string, data: any) {
     const { email, phone, channel } = data;
     
+    const contract = await prisma.contract.findUnique({
+      where: { id: contractId }
+    });
+
+    if (!contract) throw new Error('Contrato não encontrado.');
+
     const request = await prisma.signatureRequest.create({
       data: {
         contractId,
+        companyId: contract.companyId,
         email,
         phone,
-        link: `http://localhost:5173/sign/{{id}}`, // ID will be filled after creation or we can use the UUID
+        channel: channel || 'EMAIL',
+        link: `http://localhost:5173/sign/{{id}}`,
         status: SignatureStatus.AWAITING,
         logs: [
           { event: 'request_created', channel, timestamp: new Date() },
@@ -27,7 +35,7 @@ export class SignatureService {
       data: { link: finalLink }
     });
 
-    const contract = await prisma.contract.update({
+    await prisma.contract.update({
       where: { id: contractId },
       data: { status: ContractStatus.PENDING_SIGNATURE },
     });
@@ -35,7 +43,7 @@ export class SignatureService {
     // Create Audit Log for Sending
     await createAuditLog(
       contract.companyId,
-      'USER_ID_MOCKED', // In a real scenario, pass the user ID
+      'USER_ID_MOCKED',
       'SEND_FOR_SIGNATURE',
       'CONTRACT',
       { contractId, channel, target: email || phone }
@@ -47,7 +55,7 @@ export class SignatureService {
     return request;
   }
 
-  static async sign(requestId: string) {
+  static async sign(requestId: string, metadata: { ip: string, userAgent: string }) {
     const request = await prisma.signatureRequest.findUnique({
       where: { id: requestId },
       include: { contract: true }
@@ -61,7 +69,12 @@ export class SignatureService {
         status: SignatureStatus.SIGNED,
         logs: [
           ...(request.logs as any[] || []),
-          { event: 'signed_electronically', timestamp: new Date(), ip: '127.0.0.1' }
+          { 
+            event: 'signed_electronically', 
+            timestamp: new Date(), 
+            ip: metadata.ip,
+            userAgent: metadata.userAgent
+          }
         ] as any
       },
     });
